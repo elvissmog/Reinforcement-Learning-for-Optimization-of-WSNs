@@ -2,25 +2,15 @@ import numpy as np
 import networkx as nx
 import random
 import math
-import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
+import time
 
 from AllMst import Yamada
 
 G = nx.Graph()
 
 # Adding nodes to the graph and their corresponding coordinates
-'''G.add_node(0, pos=(1, 3))
-G.add_node(1, pos=(2.5, 5))
-G.add_node(2, pos=(2.5, 1))
-G.add_node(3, pos=(4.5, 5))
-G.add_node(4, pos=(4.5, 1))
-G.add_node(5, pos=(6, 3))
-
-# Adding unweighted edges to the Graph
-list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5),
-                             (4, 5)]'''
 
 xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (54, 58)]
 for i in range(len(xy)):
@@ -50,9 +40,6 @@ for u, v in list_unweighted_edges:
 
 
 
-Y = Yamada(G)
-all_MSTs = Y.spanning_trees()
-
 start = 30
 #start = random.choice(range(0, len(G.nodes)-1, 1))
 
@@ -60,14 +47,13 @@ sink_node = 92
 
 #sink_node = random.choice(range(0, len(G.nodes)-1, 1))
 
-
-
 # initialization of network parameters
+discount_factor = 0.5
 learning_rate = 0.5
 initial_energy = 0.5                  # Joules
 packet_size = 512                     # bits
-electronic_energy = 50e-9             # Joules/bit 50e-9
-amplifier_energy = 100e-12          # Joules/bit/square meter 100e-12
+electronic_energy = 50e-9            # Joules/bit 5
+amplifier_energy = 100e-12           # Joules/bit/square meter
 transmission_range = 30               # meters
 pathloss_exponent = 2                 # constant
 
@@ -77,7 +63,7 @@ Etx=[[0 for i in range(len(G))] for j in range(len(G))]
 Erx=[[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values  =[[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
-epsilon = 0.0
+epsilon = 0.1
 episodes = 200000
 
 for i in range(len(G)):
@@ -88,6 +74,9 @@ for i in range(len(G)):
 			Erx[i][j] =  electronic_energy * packet_size
 
 
+start_time = time.time()
+Y = Yamada(G)
+all_MSTs = Y.spanning_trees()
 state_space = []
 for g in all_MSTs:
     for path in nx.all_simple_paths(g, source=start, target=sink_node):
@@ -109,8 +98,6 @@ E_consumed = []
 EE_consumed = []
 
 for i in range(episodes):
-
-
 
     initial_delay = 0
     tx_energy = 0
@@ -151,8 +138,10 @@ for i in range(episodes):
         counter+=1
     #print("The Energy is, ", E_vals)
 
+    #reward = min(E_vals)
+    #reward = tx_energy
 
-    reward = min(E_vals)/sum(E_vals)
+    reward = min(E_vals)/sum(E_vals)  # Normalization of the reward and a coresponding normalization of the Q-Value
     Min_value.append(reward)
 
     # Maximum possible Q value in next step (for new state)
@@ -162,7 +151,8 @@ for i in range(episodes):
     current_q = Q_matrix[current_state, action]
 
     # And here's our equation for a new Q value for current state and action
-    new_q = (1 - learning_rate) * current_q + learning_rate * (reward +  max_future_q)
+    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
+    #new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
     Q_value.append(new_q)
 
 
@@ -184,43 +174,51 @@ for i in range(episodes):
         break
 
 
+print('Reward:', Min_value)
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
+print('Round:', Episode)
+print('Delay:', delay)
+print('Total Energy:', EE_consumed)
+print('Energy:', E_consumed)
+print('QVals:', Q_value)
 
 
-#print('reward:', Min_value)
 
 plt.plot(Episode, Q_value, label = "Q-Value")
-#plt.plot(Episode, Min_value, label = "Min NELT")
+plt.plot(Episode, Min_value, label = "Reward")
 plt.xlabel('Round')
 plt.ylabel('Q-Value')
-plt.title('Q-Value Convergence')
+#plt.title('Q-Value Convergence')
 plt.legend()
+plt.show()
+
+plt.plot(Episode, Actions)
+plt.xlabel('Round')
+plt.ylabel('Discrete Action')
+#plt.title('Selected Action for each round')
 plt.show()
 
 plt.plot(Episode, delay)
 plt.xlabel('Round')
 plt.ylabel('Delay (s)')
-plt.title('Delay for each round')
+#plt.title('Delay for each round')
 plt.show()
 
 plt.plot(Episode, E_consumed)
 plt.xlabel('Round')
 plt.ylabel('Energy Consumption (Joules)')
-plt.title('Energy Consumption for each round')
+#plt.title('Energy Consumption for each round')
 plt.show()
 
 plt.plot(Episode, EE_consumed)
 plt.xlabel('Round')
 plt.ylabel('Total Energy Consumption (Joules)')
-plt.title('Total Energy Consumption for each round')
+#plt.title('Total Energy Consumption for each round')
 plt.show()
 
-'''plt.plot(Episode, Actions)
 
-plt.xlabel('Round')
-plt.ylabel('MST')
-#plt.title('Convergence Rate')
-plt.legend()
-plt.show()'''
 
 
 
