@@ -156,7 +156,7 @@ for i in range(num_of_episodes):
 
 
         path = path + "->" + str(next_hop)  # update the path after each visit
-
+        print('path:', path)
         # print("The visited nodes are", queue)
 
         start = next_hop
