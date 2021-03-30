@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
-from scipy.spatial.distance import pdist, squareform
 
 # Instantiating the G object
 

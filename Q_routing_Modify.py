@@ -41,9 +41,12 @@ node_neigh = {}
 for n in G.nodes:
     node_neigh[n] = list(G.neighbors(n))
 
+print('node_neigh_keys:', list(node_neigh.keys()))
+#node_neigh.pop(3)
+#print('Updated node_neigh:', node_neigh)
 # initialization of network parameters
 learning_rate = 0.5
-initial_energy = 0.5  # Joules
+initial_energy = 0.005  # Joules
 packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 amplifier_energy = 100e-12  # Joules/bit/square meter 100e-12
@@ -68,7 +71,7 @@ for i in range(len(G)):
 
 # initialize starting point
 
-num_of_episodes = 10000
+num_of_episodes = 1000
 start = 0
 queue = [start]
 mean_Q = []
@@ -76,7 +79,7 @@ E_consumed = []
 EE_consumed = []
 delay = []
 round = []
-
+deleted_neigh = []
 for i in range(num_of_episodes):
 
     start = 0
@@ -101,15 +104,25 @@ for i in range(num_of_episodes):
         continue'''
         #break
 
-
+    print('node_neigh:', node_neigh)
     while True:
-
         for neigh in node_neigh[start]:
             #print('node_neigh(start1):', node_neigh[start])
             if E_vals[neigh] <= 0:
-                print("The neigh and the others are {} and {} ".format(neigh, node_neigh[start]))
-                #print('neigh:', neigh)
-                node_neigh[start].remove(neigh)
+                #print("The neigh and the others are {} and {} ".format(neigh, node_neigh[start]))
+                deleted_neigh.append(neigh)
+                try:
+                    del node_neigh[neigh]
+                except KeyError:
+                    pass
+
+                '''for item in node_neigh.keys():
+                    for index in range(len(node_neigh[item])):
+                        if  neigh == node_neigh[item][index]:
+                            node_neigh[item].remove(node_neigh[item][index])
+                            print('node_neigh[item][index]:', node_neigh[item][index])
+                            #node_neigh[item].remove(node_neigh[item][index])'''
+                #node_neigh[start].remove(neigh)
             #print('node_neigh(start2):', node_neigh[start])
             temp_qval[neigh] = (1 - learning_rate) * path_Q_values[start][neigh] + learning_rate * (R[start][neigh] + Q_vals[neigh])
 
@@ -151,6 +164,8 @@ for i in range(num_of_episodes):
         if next_hop == end:
             break
 
+    print('Deleted_neigh:', deleted_neigh)
+    print('updated_node_neigh:', node_neigh)
     delay.append(initial_delay)
     E_consumed.append(tx_energy + rx_energy)
     EE_consumed.append(sum(E_consumed))

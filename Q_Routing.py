@@ -96,7 +96,7 @@ Q_vals = [0 for i in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
 
 init_E = [5]*len(G)
-epsilon = 0.1
+epsilon = 0.0
 
 def ConsumedReceivingEnergy():
     consume_rec_energy = electronic_energy * packet_size
