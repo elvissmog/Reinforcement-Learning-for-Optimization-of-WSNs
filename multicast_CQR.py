@@ -62,7 +62,7 @@ for T in all_MSTs:
 	for n in T.nodes:
 		node_neighT[n] = list(T.neighbors(n))
 	node_neigh.append(node_neighT)
-#print(node_neigh)
+print(node_neigh)
 
 # Ranking nodes in terms of hop count to sink for each MST
 MSTs_hop_count = []
@@ -73,7 +73,7 @@ for T in all_MSTs:
 			hop_counts[n] = len(path) - 1
 	hop_counts[sink_node] = 1                  # hop count of sink
 	MSTs_hop_count.append(hop_counts)
-#print(MSTs_hop_count)
+print(MSTs_hop_count)
 
 Q_matrix = np.zeros((len(all_MSTs), len(all_MSTs)))
 initial_state = random.choice(range(0, len(all_MSTs), 1))
@@ -107,10 +107,8 @@ for i in range(episodes):
     Actions.append(action)
 
     initial_state = action
-    #print('action is:', action)
-
     chosen_MST = MSTs_hop_count[action]
-    #print('choosen MST:', chosen_MST)
 
-    #transmit with chosen MST and compute the residual energy of each node
+
+
 
