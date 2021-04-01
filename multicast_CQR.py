@@ -40,9 +40,9 @@ Erx=[[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values  =[[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.1
-episodes = 200000
+episodes = 1
 
-sink_node = 5
+sink_node = 3
 
 for i in range(len(G)):
 	for j in range(len(G)):
@@ -66,17 +66,24 @@ for T in all_MSTs:
 
 # Ranking nodes in terms of hop count to sink for each MST
 MSTs_hop_count = []
+MST_paths = []
 for T in all_MSTs:
 	hop_counts = {}
+	MST_path = {}
 	for n in T.nodes:
 		for path in nx.all_simple_paths(T, source=n, target=sink_node):
 			hop_counts[n] = len(path) - 1
-	hop_counts[sink_node] = 1                  # hop count of sink
+			MST_path[n]=path
+	hop_counts[sink_node] = 0                  # hop count of sink
 	MSTs_hop_count.append(hop_counts)
-#print(MSTs_hop_count)
+	MST_paths.append(MST_path)
+	
+print('All paths 1 ', MST_paths)
 
+"""
 Q_matrix = np.zeros((len(all_MSTs), len(all_MSTs)))
 initial_state = random.choice(range(0, len(all_MSTs), 1))
+
 
 Q_value = []
 Min_value = []
@@ -109,8 +116,52 @@ for i in range(episodes):
     initial_state = action
     #print('action is:', action)
 
-    chosen_MST = MSTs_hop_count[action]
-    #print('choosen MST:', chosen_MST)
+    #chosen_MST = MSTs_hop_count[action]
+    chosen_MST= {0:2,1:2,2:2,3:1,4:1,5:0}
+    node_neigh2={0:3,1:3, 3: [0,1,5], 4:[2,5], 5:[3,4]}
 
-    #transmit with chosen MST and compute the residual energy of each node
+    print('chosen MST: ', chosen_MST)
+    print('node neighbors:', node_neigh[action])
 
+
+    counter = 0
+    node = max(chosen_MST.keys(), key=(lambda k: chosen_MST[k])) #choose starting node
+    other_nodes = [elem for elem in node_neigh2.keys() if node_neigh2[elem]==node_neigh2[node]]
+    start_nodes = []
+    for elem in other_nodes:
+    	start_nodes.append(elem)
+
+
+    print('start nodes: ',start_nodes)
+    num_of_pkts =1
+    	
+    while counter< len(chosen_MST):
+    	
+    	#neighs =node_neigh[action][node]
+    	print('start node:', node)
+    	neighs = node_neigh2[node]
+    	print('neighs', neighs)
+    	next_hop = []
+    	for elem in start_nodes:
+    		next_hop.append(elem for elem in neighs if chosen_MST[node]-chosen_MST[elem]==1)
+    		print('next_hop', next_hop)
+    	
+    	#Transmitted and received energies
+
+    	for elem in next_hop:
+    		for node in start_nodes:
+    			E_vals[node] = E_vals[node] - num_of_pkts*Etx[node][elem]
+    			E_vals[elem]= E_vals[elem] - num_of_pkts*Erx[node][elem]
+    			print('Energy', E_vals)
+    		num_of_pkts+=1
+
+    	counter+=1
+    	
+
+    	node = next_hop[0]
+    	print('new node is:', node)
+
+    	if node==sink_node:
+    		break
+    num_of_pkts-=1 #total number of packet transmissions
+    """
