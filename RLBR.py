@@ -86,7 +86,7 @@ for n in T.nodes:
     for path in nx.all_simple_paths(T, source=n, target=sink_node):
         hop_counts[n] = len(path) - 1
 
-hop_counts[sink_node] = 1  # hop count of sink
+hop_counts[sink_node]= 1   #hop count of sink
 
 # Initialize Q_values
 q_values = {}
