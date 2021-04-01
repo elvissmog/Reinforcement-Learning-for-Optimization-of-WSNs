@@ -123,15 +123,94 @@ for i in range(episodes):
 
     for node in chosen_MST:
     	counter = 0
-    	while counter < len(chosen_MST[node]):
+    	while counter < len(chosen_MST[node])-1:
     		init_node = chosen_MST[node][counter]
     		next_node = chosen_MST[node][counter + 1]
     		E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
     		E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
     		counter+=1
+    		print("counter", counter)
 
-    print('Energy',E_vals)
-    reward = min(E_vals)
+    		
+
+    
+    reward = min(E_vals)/sum(E_vals)
+    Min_value.append(reward)
+    # Maximum possible Q value in next step (for new state)
+    max_future_q = np.max(Q_matrix[action, :])
+
+    # Current Q value (for current state and performed action)
+    current_q = Q_matrix[current_state, action]
+    # And here's our equation for a new Q value for current state and action
+    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
+    #new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
+    Q_value.append(new_q)
+
+    # Update Q table with new Q value
+    Q_matrix[current_state, action] = new_q
+
+    delay.append(initial_delay)
+    E_consumed.append(tx_energy + rx_energy)
+    EE_consumed.append(sum(E_consumed))
+
+    cost = True
+    for item in E_vals:
+        if item <= 0:
+            cost = False
+            print("Energy cannot be negative!")
+            print("The final round is", i)
+
+    if not cost:
+        break
+
+
+
+print('Reward:', Min_value)
+
+#print("--- %s seconds ---" % (time.time() - start_time))
+
+print('Round:', Episode)
+print('Delay:', delay)
+print('Total Energy:', EE_consumed)
+print('Energy:', E_consumed)
+print('QVals:', Q_value)
+
+
+
+plt.plot(Episode, Q_value, label = "Q-Value")
+plt.plot(Episode, Min_value, label = "Reward")
+plt.xlabel('Round')
+plt.ylabel('Q-Value')
+#plt.title('Q-Value Convergence')
+plt.legend()
+plt.show()
+
+plt.plot(Episode, Actions)
+plt.xlabel('Round')
+plt.ylabel('Discrete Action')
+#plt.title('Selected Action for each round')
+plt.show()
+
+plt.plot(Episode, delay)
+plt.xlabel('Round')
+plt.ylabel('Delay (s)')
+#plt.title('Delay for each round')
+plt.show()
+
+plt.plot(Episode, E_consumed)
+plt.xlabel('Round')
+plt.ylabel('Energy Consumption (Joules)')
+#plt.title('Energy Consumption for each round')
+plt.show()
+
+plt.plot(Episode, EE_consumed)
+plt.xlabel('Round')
+plt.ylabel('Total Energy Consumption (Joules)')
+#plt.title('Total Energy Consumption for each round')
+plt.show()
+
+
+
 
 
 
