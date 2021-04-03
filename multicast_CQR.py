@@ -40,7 +40,7 @@ Erx=[[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values  =[[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.1
-episodes = 1
+episodes = 10000
 
 sink_node = 5
 
@@ -122,14 +122,16 @@ for i in range(episodes):
     print(chosen_MST)
 
     for node in chosen_MST:
-    	counter = 0
-    	while counter < len(chosen_MST[node])-1:
-    		init_node = chosen_MST[node][counter]
-    		next_node = chosen_MST[node][counter + 1]
-    		E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
-    		E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
-    		counter+=1
-    		print("counter", counter)
+        counter = 0
+        while counter < len(chosen_MST[node])-1:
+            init_node = chosen_MST[node][counter]
+            next_node = chosen_MST[node][counter + 1]
+            E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
+            # E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
+            tx_energy += Etx[init_node][next_node]
+            rx_energy += Erx[init_node][next_node]
+            counter += 1
+            #print("counter", counter)
 
     		
 
@@ -170,12 +172,10 @@ print('Reward:', Min_value)
 #print("--- %s seconds ---" % (time.time() - start_time))
 
 print('Round:', Episode)
-print('Delay:', delay)
+#print('Delay:', delay)
 print('Total Energy:', EE_consumed)
 print('Energy:', E_consumed)
 print('QVals:', Q_value)
-
-
 
 plt.plot(Episode, Q_value, label = "Q-Value")
 plt.plot(Episode, Min_value, label = "Reward")
@@ -191,11 +191,11 @@ plt.ylabel('Discrete Action')
 #plt.title('Selected Action for each round')
 plt.show()
 
-plt.plot(Episode, delay)
+'''plt.plot(Episode, delay)
 plt.xlabel('Round')
 plt.ylabel('Delay (s)')
 #plt.title('Delay for each round')
-plt.show()
+plt.show()'''
 
 plt.plot(Episode, E_consumed)
 plt.xlabel('Round')
