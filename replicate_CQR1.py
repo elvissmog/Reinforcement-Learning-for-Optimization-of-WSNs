@@ -48,7 +48,7 @@ Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values = [[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
-epsilon = 0.2
+epsilon = 0.1
 episodes = 200000
 
 sink_node = 99

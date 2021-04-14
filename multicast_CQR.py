@@ -40,7 +40,7 @@ Erx=[[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values  =[[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.1
-episodes = 10000
+episodes = 100
 
 sink_node = 5
 
@@ -136,7 +136,7 @@ for i in range(episodes):
     		
 
     
-    reward = min(E_vals)/sum(E_vals)
+    reward = min(E_vals)
     Min_value.append(reward)
     # Maximum possible Q value in next step (for new state)
     max_future_q = np.max(Q_matrix[action, :])
@@ -170,8 +170,8 @@ for i in range(episodes):
 print('Reward:', Min_value)
 
 #print("--- %s seconds ---" % (time.time() - start_time))
-
-print('Round:', Episode)
+print(Actions)
+'''print('Round:', Episode)
 #print('Delay:', delay)
 print('Total Energy:', EE_consumed)
 print('Energy:', E_consumed)
@@ -191,12 +191,6 @@ plt.ylabel('Discrete Action')
 #plt.title('Selected Action for each round')
 plt.show()
 
-'''plt.plot(Episode, delay)
-plt.xlabel('Round')
-plt.ylabel('Delay (s)')
-#plt.title('Delay for each round')
-plt.show()'''
-
 plt.plot(Episode, E_consumed)
 plt.xlabel('Round')
 plt.ylabel('Energy Consumption (Joules)')
@@ -207,7 +201,7 @@ plt.plot(Episode, EE_consumed)
 plt.xlabel('Round')
 plt.ylabel('Total Energy Consumption (Joules)')
 #plt.title('Total Energy Consumption for each round')
-plt.show()
+plt.show()'''
 
 
 
