@@ -25,8 +25,6 @@ def build_graph(positions, links):
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
 
 
-
-
 # Adding unweighted edges to the Graph
 list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
 
@@ -65,6 +63,7 @@ EE_consumed = []
 for i in range(episodes):
 
     graph, distances = build_graph(xy, list_unweighted_edges)
+
     Etx = [[0 for i in range(len(graph))] for j in range(len(graph))]
     Erx = [[0 for i in range(len(graph))] for j in range(len(graph))]
     CEtx = [[0 for i in range(len(graph))] for j in range(len(graph))]
