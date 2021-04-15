@@ -11,20 +11,43 @@ from AllMst import Yamada
 G = nx.Graph()
 
 def build_graph(positions, links):
+
     for i in positions:
         G.add_node(i, pos=positions[i])
     position_array = []
-    for node in sorted(G):
-        position_array.append(G.nodes[node]['pos'])
-    distances = squareform(pdist(np.array(position_array)))
+    for nd in sorted(G):
+        position_array.append(G.nodes[nd]['pos'])
+    dist = squareform(pdist(np.array(position_array)))
     for u, v in links:
         # G.add_edge(u, v, weight = 1)
-        G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
-    return G, distances
+        G.add_edge(u, v, weight=np.round(dist[u][v], decimals=1))
+    z = Yamada(graph = G, n_trees=100)
+    all_msts = z.spanning_trees()
+    node_neigh = []
+    for T in all_msts:
+        node_neighT = {}
+        for n in T.nodes:
+            node_neighT[n] = list(T.neighbors(n))
+        node_neigh.append(node_neighT)
+    MSTs_hop_count = []
+    MST_paths = []
+    for T in all_msts:
+        hop_counts = {}
+        MST_path = {}
+        for n in T.nodes:
+            for path in nx.all_simple_paths(T, source=n, target=sink_node):
+                hop_counts[n] = len(path) - 1
+                MST_path[n] = path
+        hop_counts[sink_node] = 0  # hop count of sink
+        MSTs_hop_count.append(hop_counts)
+        MST_paths.append(MST_path)
+
+    # print('All paths', MST_paths)
+
+    return G, dist, all_msts, MST_paths
+
 
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
-
-
 
 
 # Adding unweighted edges to the Graph
@@ -41,11 +64,8 @@ data_packet_size = 216  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 amplifier_energy = 100e-12  # Joules/bit/square meter
 transmission_range = 30  # meters
-pathloss_exponent = 2  # constant
 packet_gen_rate = 2    # per seconds
 learning_period = 10    # secs
-packet_number = 1
-
 
 
 epsilon = 0.1
@@ -62,11 +82,12 @@ Average_Delay = []
 E_consumed = []
 EE_consumed = []
 
-graph, distances = build_graph(xy, list_unweighted_edges)
-Etx = [[0 for i in range(len(graph))] for j in range(len(graph))]
-Erx = [[0 for i in range(len(graph))] for j in range(len(graph))]
-CEtx = [[0 for i in range(len(graph))] for j in range(len(graph))]
-CErx = [[0 for i in range(len(graph))] for j in range(len(graph))]
+graph, distances, rts, rtp = build_graph(xy, list_unweighted_edges)
+Etx = {i: [0 for j in graph.nodes] for i in graph.nodes}
+Erx = {i: [0 for j in graph.nodes] for i in graph.nodes}
+CEtx = {i: [0 for j in graph.nodes] for i in graph.nodes}
+CErx = {i: [0 for j in graph.nodes] for i in graph.nodes}
+
 E_vals = {}
 for idx in graph.nodes:
     if idx == sink_node:
@@ -74,61 +95,41 @@ for idx in graph.nodes:
     else:
         E_vals[idx] = initial_energy
 
-for i in range(len(graph)):
-    for j in range(len(graph)):
+for i in Etx:
+    for j in range(len(Etx[i])):
         if i != j:
-
-            Etx[i][j] = electronic_energy * data_packet_size + amplifier_energy * data_packet_size * packet_number * math.pow(
-                (distances[i][j]), pathloss_exponent)
+            Etx[i][j] = electronic_energy * data_packet_size + amplifier_energy * data_packet_size  * math.pow((distances[i][j]), 2)
 
             Erx[i][j] = electronic_energy * data_packet_size
 
-            CEtx[i][j] = electronic_energy * control_packet_size + amplifier_energy * control_packet_size * packet_number * math.pow((distances[i][j]), pathloss_exponent)
+            CEtx[i][j] = electronic_energy * control_packet_size + amplifier_energy * control_packet_size * math.pow((distances[i][j]), 2)
             CErx[i][j] = electronic_energy * control_packet_size
 
-Y = Yamada(graph=graph, n_trees=100)
-all_MSTs = Y.spanning_trees()
+print('distances:', distances)
+print('Etx:', Etx)
+
+
+
 
 # the set of neighbors of all nodes in each MST
-node_neigh = []
-for T in all_MSTs:
-    node_neighT = {}
-    for n in T.nodes:
-        node_neighT[n] = list(T.neighbors(n))
-    node_neigh.append(node_neighT)
+
 # print(node_neigh)
 
 # Ranking nodes in terms of hop count to sink for each MST
-MSTs_hop_count = []
-MST_paths = []
-for T in all_MSTs:
-    hop_counts = {}
-    MST_path = {}
-    for n in T.nodes:
-        for path in nx.all_simple_paths(T, source=n, target=sink_node):
-            hop_counts[n] = len(path) - 1
-            MST_path[n] = path
-    hop_counts[sink_node] = 0  # hop count of sink
-    MSTs_hop_count.append(hop_counts)
-    MST_paths.append(MST_path)
-
-# print('All paths', MST_paths)
-
-Q_matrix = np.zeros((len(all_MSTs), len(all_MSTs)))
-initial_state = random.choice(range(0, len(all_MSTs), 1))
 
 
-for round in range(episodes):
 
-    
-   
+for rdn in range(episodes):
+
+    Q_matrix = np.zeros((len(rts), len(rts)))
+    initial_state = random.choice(range(0, len(rts), 1))
     delay = 0
     tx_energy = 0
     rx_energy = 0
     ctx_energy = 0
     crx_energy = 0
-    Episode.append(i)
-    available_actions = [*range(0, len(all_MSTs), 1)]
+    Episode.append(rdn)
+    available_actions = [*range(0, len(rts), 1)]
 
     current_state = initial_state
 
@@ -146,7 +147,7 @@ for round in range(episodes):
     initial_state = action
     # print('action is:', action)
 
-    chosen_MST = MST_paths[action]
+    chosen_MST = rtp[action]
     #print('chosen MST:', chosen_MST)
     Delay = []
     # Data transmission
@@ -202,32 +203,46 @@ for round in range(episodes):
     E_consumed.append(tx_energy + rx_energy + ctx_energy + crx_energy)
     EE_consumed.append(sum(E_consumed))
 
-    cost = True
+    cost = 0
+    dead_node = None
     update_edges = []
     for index, item in E_vals.items():
+
         if item <= 0:
             print('Index:', index)
             print('Evals:', E_vals)
-            cost = False
+            cost = cost + 1
             print("Energy cannot be negative!")
-            print("The final round is", round)
-            xy.pop(index)
-        for ind in list_unweighted_edges:
-            if ind[0] != index and ind[1] != index:
-                update_edges.append(ind)
-        ngraph, ndistances = build_graph(xy, update_edges)
+            print("The final round is", rdn)
+            yz = xy.copy()
+            yz.pop(index)
+            dead_node = index
+    for ind in list_unweighted_edges:
+        if ind[0] != dead_node and ind[1] != dead_node:
+            update_edges.append(ind)
 
-        graph, distances = ngraph, ndistances
     
 
     #print('E_vals:', E_vals)
     #print('E_tx:', Etx)
     #print('Episode:',round)
     print('new nodes:', xy)
+    print('Updated edges:', update_edges)
+    print('Original edges:', list_unweighted_edges)
 
 
-    if not cost:
-        break
+    if cost == 1:
+        print('cost:', cost)
+        graph, distances, rts, rtp = build_graph(xy, update_edges)
+        print('distances:', distances)
+        print('new_nodes:', graph.nodes)
+        print('new_edges:', graph.edges)
+        cost = 0
+    #graph, distances = ngraph, ndistances
+
+
+
+
 
 '''print('Actions:', Actions)
 print('Reward:', Min_value)
