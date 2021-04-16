@@ -3,24 +3,25 @@ import networkx as nx
 import random
 import math
 import matplotlib.pyplot as plt
-from scipy.spatial.distance import pdist, squareform
+
 import time
 
 from AllMst import Yamada
-
-
 
 def build_graph(positions, links):
     G = nx.Graph()
     for i in positions:
         G.add_node(i, pos=positions[i])
-    position_array = []
-    for nd in sorted(G):
-        position_array.append(G.nodes[nd]['pos'])
-    dist = squareform(pdist(np.array(position_array)))
+    print('graph nodes:', G.nodes)
+    global position_array
+    position_array = {}
+    for nd in G:
+        position_array[nd] = G.nodes[nd]['pos']
+    print('Position array:', position_array)
+
     for u, v in links:
         # G.add_edge(u, v, weight = 1)
-        G.add_edge(u, v, weight=np.round(dist[u][v], decimals=1))
+        G.add_edge(u, v, weight = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow((position_array[u][1] - position_array[v][1]), 2)))
     z = Yamada(graph = G, n_trees=100)
     all_msts = z.spanning_trees()
     node_neigh = []
@@ -44,7 +45,7 @@ def build_graph(positions, links):
 
     # print('All paths', MST_paths)
 
-    return G, dist, all_msts, MST_paths
+    return G, all_msts, MST_paths
 
 
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
@@ -82,11 +83,8 @@ Average_Delay = []
 E_consumed = []
 EE_consumed = []
 
-graph, distances, rts, rtp = build_graph(xy, list_unweighted_edges)
-Etx = {i: [0 for j in graph.nodes] for i in graph.nodes}
-Erx = {i: [0 for j in graph.nodes] for i in graph.nodes}
-CEtx = {i: [0 for j in graph.nodes] for i in graph.nodes}
-CErx = {i: [0 for j in graph.nodes] for i in graph.nodes}
+graph, rts, rtp = build_graph(xy, list_unweighted_edges)
+
 
 E_vals = {}
 for idx in graph.nodes:
@@ -94,30 +92,6 @@ for idx in graph.nodes:
         E_vals[idx] = 50
     else:
         E_vals[idx] = initial_energy
-
-for i in Etx:
-    for j in range(len(Etx[i])):
-        if i != j:
-            Etx[i][j] = electronic_energy * data_packet_size + amplifier_energy * data_packet_size  * math.pow((distances[i][j]), 2)
-
-            Erx[i][j] = electronic_energy * data_packet_size
-
-            CEtx[i][j] = electronic_energy * control_packet_size + amplifier_energy * control_packet_size * math.pow((distances[i][j]), 2)
-            CErx[i][j] = electronic_energy * control_packet_size
-
-#print('distances:', distances)
-#print('Etx:', Etx)
-
-
-
-
-# the set of neighbors of all nodes in each MST
-
-# print(node_neigh)
-
-# Ranking nodes in terms of hop count to sink for each MST
-
-
 
 for rdn in range(episodes):
 
@@ -156,11 +130,14 @@ for rdn in range(episodes):
         while counter < len(chosen_MST[node]) - 1:
             init_node = chosen_MST[node][counter]
             next_node = chosen_MST[node][counter + 1]
-            E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
-            E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
-            tx_energy += Etx[init_node][next_node]
-            rx_energy += Erx[init_node][next_node]
-            delay += distances[init_node][next_node]
+            dis = math.sqrt(math.pow((position_array[init_node][0] - position_array[next_node][0]), 2) + math.pow((position_array[init_node][1] - position_array[next_node][1]), 2))
+            etx = electronic_energy * data_packet_size + amplifier_energy * data_packet_size  * math.pow(dis, 2)
+            erx = electronic_energy * data_packet_size
+            E_vals[init_node] = E_vals[init_node] - etx  # update the start node energy
+            E_vals[next_node] = E_vals[next_node] - erx  # update the next hop energy
+            tx_energy += etx
+            rx_energy += erx
+            delay += dis
             counter += 1
         Delay.append(delay)
             #print("counter", counter)
@@ -176,10 +153,13 @@ for rdn in range(episodes):
         while counter < len(chosen_MST[node]) - 1:
             init_node = chosen_MST[node][counter]
             next_node = chosen_MST[node][counter + 1]
-            E_vals[init_node] = E_vals[init_node] - CEtx[init_node][next_node]  # update the start node energy
-            E_vals[next_node] = E_vals[next_node] - CErx[init_node][next_node]  # update the next hop energy
-            ctx_energy += CEtx[init_node][next_node]
-            crx_energy += CErx[init_node][next_node]
+            dis = math.sqrt(math.pow((position_array[init_node][0] - position_array[next_node][0]), 2) + math.pow((position_array[init_node][1] - position_array[next_node][1]), 2))
+            cetx = electronic_energy * data_packet_size + amplifier_energy * control_packet_size * math.pow(dis, 2)
+            cerx = electronic_energy * control_packet_size
+            E_vals[init_node] = E_vals[init_node] - cetx  # update the start node energy
+            E_vals[next_node] = E_vals[next_node] - cerx  # update the next hop energy
+            ctx_energy += cetx
+            crx_energy += cerx
             counter += 1
 
 
@@ -217,6 +197,7 @@ for rdn in range(episodes):
             #yz = xy.copy()
             #yz.pop(index)
             xy.pop(index)
+            #E_vals.pop(index)
             dead_node = index
     for ind in list_unweighted_edges:
         if ind[0] != dead_node and ind[1] != dead_node:
@@ -235,8 +216,8 @@ for rdn in range(episodes):
         print('new nodes:', xy)
         print('Updated edges:', update_edges)
         print('Original edges:', list_unweighted_edges)
-        graph, distances, rts, rtp = build_graph(xy, update_edges)
-        print('distances:', distances)
+        graph, rts, rtp = build_graph(xy, update_edges)
+
         print('new_nodes:', graph.nodes)
         print('new_edges:', graph.edges)
         cost = 0
