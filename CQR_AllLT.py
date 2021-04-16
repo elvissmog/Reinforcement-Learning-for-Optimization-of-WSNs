@@ -8,10 +8,10 @@ import time
 
 from AllMst import Yamada
 
-G = nx.Graph()
+
 
 def build_graph(positions, links):
-
+    G = nx.Graph()
     for i in positions:
         G.add_node(i, pos=positions[i])
     position_array = []
@@ -105,8 +105,8 @@ for i in Etx:
             CEtx[i][j] = electronic_energy * control_packet_size + amplifier_energy * control_packet_size * math.pow((distances[i][j]), 2)
             CErx[i][j] = electronic_energy * control_packet_size
 
-print('distances:', distances)
-print('Etx:', Etx)
+#print('distances:', distances)
+#print('Etx:', Etx)
 
 
 
@@ -214,8 +214,9 @@ for rdn in range(episodes):
             cost = cost + 1
             print("Energy cannot be negative!")
             print("The final round is", rdn)
-            yz = xy.copy()
-            yz.pop(index)
+            #yz = xy.copy()
+            #yz.pop(index)
+            xy.pop(index)
             dead_node = index
     for ind in list_unweighted_edges:
         if ind[0] != dead_node and ind[1] != dead_node:
@@ -226,13 +227,14 @@ for rdn in range(episodes):
     #print('E_vals:', E_vals)
     #print('E_tx:', Etx)
     #print('Episode:',round)
-    print('new nodes:', xy)
-    print('Updated edges:', update_edges)
-    print('Original edges:', list_unweighted_edges)
+
 
 
     if cost == 1:
         print('cost:', cost)
+        print('new nodes:', xy)
+        print('Updated edges:', update_edges)
+        print('Original edges:', list_unweighted_edges)
         graph, distances, rts, rtp = build_graph(xy, update_edges)
         print('distances:', distances)
         print('new_nodes:', graph.nodes)
