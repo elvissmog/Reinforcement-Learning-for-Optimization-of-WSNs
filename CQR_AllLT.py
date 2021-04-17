@@ -216,7 +216,7 @@ for rdn in range(episodes):
 
     
 
-    print('E_vals:', E_vals)
+    #print('E_vals:', E_vals)
     #print('E_tx:', Etx)
     #print('Episode:',round)
 
@@ -234,7 +234,7 @@ for rdn in range(episodes):
         cost = 0
     #graph, distances = ngraph, ndistances
 
-
+    list_unweighted_edges = update_edges
 
 
 
