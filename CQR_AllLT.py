@@ -1,3 +1,5 @@
+from tkinter import messagebox
+
 import numpy as np
 import networkx as nx
 import random
@@ -51,7 +53,7 @@ def build_graph(positions, links):
 
     for idx in G.nodes:
     	if idx == sink_node:
-    		e_vals[idx] = 50 
+    		e_vals[idx] = 50
 
     	e_vals[idx] = initial_energy
 
@@ -227,7 +229,12 @@ for rdn in range(episodes):
         print('new nodes:', xy)
         print('Updated edges:', update_edges)
         print('Original edges:', list_unweighted_edges)
-        graph, rts, rtp, E_vals = build_graph(xy, update_edges)
+        try:
+            graph, rts, rtp, E_vals = build_graph(xy, update_edges)
+        except ValueError:
+            #Error = messagebox.showinfo("Enter proper values")
+            break
+
 
         print('new_nodes:', graph.nodes)
         print('new_edges:', graph.edges)
@@ -238,7 +245,7 @@ for rdn in range(episodes):
 
 
 
-'''print('Actions:', Actions)
+print('Actions:', Actions)
 print('Reward:', Min_value)
 
 #print("--- %s seconds ---" % (time.time() - start_time))
@@ -279,4 +286,4 @@ plt.plot(Episode, EE_consumed)
 plt.xlabel('Round')
 plt.ylabel('Total Energy Consumption (Joules)')
 # plt.title('Total Energy Consumption for each round')
-plt.show()'''
+plt.show()
