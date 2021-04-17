@@ -8,6 +8,9 @@ import time
 
 from AllMst import Yamada
 
+
+sink_node = 5
+
 def build_graph(positions, links):
     G = nx.Graph()
     for i in positions:
@@ -43,9 +46,17 @@ def build_graph(positions, links):
         MSTs_hop_count.append(hop_counts)
         MST_paths.append(MST_path)
 
-    # print('All paths', MST_paths)
+    #Energy consumption
+    e_vals = {}
 
-    return G, all_msts, MST_paths
+    for idx in G.nodes:
+    	if idx == sink_node:
+    		e_vals[idx] = 50 
+
+    	e_vals[idx] = initial_energy
+
+
+    return G, all_msts, MST_paths, e_vals
 
 
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
@@ -72,7 +83,7 @@ learning_period = 10    # secs
 epsilon = 0.1
 episodes = 10000
 
-sink_node = 5
+
 
 
 Q_value = []
@@ -83,16 +94,16 @@ Average_Delay = []
 E_consumed = []
 EE_consumed = []
 
-graph, rts, rtp = build_graph(xy, list_unweighted_edges)
+graph, rts, rtp, E_vals = build_graph(xy, list_unweighted_edges)
 
-
+"""
 E_vals = {}
 for idx in graph.nodes:
     if idx == sink_node:
         E_vals[idx] = 50
     else:
         E_vals[idx] = initial_energy
-
+"""
 for rdn in range(episodes):
 
     Q_matrix = np.zeros((len(rts), len(rts)))
@@ -205,7 +216,7 @@ for rdn in range(episodes):
 
     
 
-    #print('E_vals:', E_vals)
+    print('E_vals:', E_vals)
     #print('E_tx:', Etx)
     #print('Episode:',round)
 
@@ -216,7 +227,7 @@ for rdn in range(episodes):
         print('new nodes:', xy)
         print('Updated edges:', update_edges)
         print('Original edges:', list_unweighted_edges)
-        graph, rts, rtp = build_graph(xy, update_edges)
+        graph, rts, rtp, E_vals = build_graph(xy, update_edges)
 
         print('new_nodes:', graph.nodes)
         print('new_edges:', graph.edges)
