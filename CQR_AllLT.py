@@ -260,7 +260,7 @@ plt.plot(Episode, Q_value, label="Q-Value")
 plt.plot(Episode, Min_value, label="Reward")
 plt.xlabel('Round')
 plt.ylabel('Q-Value (Joules)')
-# plt.title('Q-Value Convergence')
+plt.title('Q-Value Convergence')
 plt.legend()
 plt.show()
 
