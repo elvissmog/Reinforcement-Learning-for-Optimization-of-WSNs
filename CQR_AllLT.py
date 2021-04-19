@@ -1,5 +1,3 @@
-from tkinter import messagebox
-
 import numpy as np
 import networkx as nx
 import random
@@ -17,12 +15,12 @@ def build_graph(positions, links):
     G = nx.Graph()
     for i in positions:
         G.add_node(i, pos=positions[i])
-    print('graph nodes:', G.nodes)
+    #print('graph nodes:', G.nodes)
     global position_array
     position_array = {}
     for nd in G:
         position_array[nd] = G.nodes[nd]['pos']
-    print('Position array:', position_array)
+    #print('Position array:', position_array)
 
     for u, v in links:
         # G.add_edge(u, v, weight = 1)
@@ -48,17 +46,18 @@ def build_graph(positions, links):
         MSTs_hop_count.append(hop_counts)
         MST_paths.append(MST_path)
 
-    #Energy consumption
+    #Q_matrix of all Msts
+    Q_matrix = np.zeros((len(all_msts), len(all_msts)))
+    # Energy consumption
     e_vals = {}
 
     for idx in G.nodes:
-    	if idx == sink_node:
-    		e_vals[idx] = 50
+        if idx != sink_node:
+            e_vals[idx] = initial_energy
+        else:
+            e_vals[idx] = 50
 
-    	e_vals[idx] = initial_energy
-
-
-    return G, all_msts, MST_paths, e_vals
+    return G, all_msts, MST_paths, e_vals, Q_matrix
 
 
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
@@ -96,7 +95,7 @@ Average_Delay = []
 E_consumed = []
 EE_consumed = []
 
-graph, rts, rtp, E_vals = build_graph(xy, list_unweighted_edges)
+graph, rts, rtp, E_vals, q_matrix = build_graph(xy, list_unweighted_edges)
 
 """
 E_vals = {}
@@ -106,9 +105,13 @@ for idx in graph.nodes:
     else:
         E_vals[idx] = initial_energy
 """
+start_time = time.time()
+
+
+
 for rdn in range(episodes):
 
-    Q_matrix = np.zeros((len(rts), len(rts)))
+
     initial_state = random.choice(range(0, len(rts), 1))
     delay = 0
     tx_energy = 0
@@ -125,7 +128,7 @@ for rdn in range(episodes):
         action = random.choice(available_actions)
     else:
         # Get random action
-        action = np.argmax(Q_matrix[current_state, :])
+        action = np.argmax(q_matrix[current_state, :])
 
     y = action + 1
     Actions.append(y)
@@ -180,17 +183,17 @@ for rdn in range(episodes):
     #reward = min(E_vals) / sum(E_vals)
 
     # Maximum possible Q value in next step (for new state)
-    max_future_q = np.max(Q_matrix[action, :])
+    max_future_q = np.max(q_matrix[action, :])
 
     # Current Q value (for current state and performed action)
-    current_q = Q_matrix[current_state, action]
+    current_q = q_matrix[current_state, action]
     # And here's our equation for a new Q value for current state and action
     new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
     #new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
     Q_value.append(new_q)
 
     # Update Q table with new Q value
-    Q_matrix[current_state, action] = new_q
+    q_matrix[current_state, action] = new_q
 
     Average_Delay.append(sum(Delay)/len(Delay))
     E_consumed.append(tx_energy + rx_energy + ctx_energy + crx_energy)
@@ -230,7 +233,8 @@ for rdn in range(episodes):
         print('Updated edges:', update_edges)
         print('Original edges:', list_unweighted_edges)
         try:
-            graph, rts, rtp, E_vals = build_graph(xy, update_edges)
+            graph, rts, rtp, E_vals, q_matrix = build_graph(xy, update_edges)
+
         except ValueError:
             #Error = messagebox.showinfo("Enter proper values")
             break
@@ -242,13 +246,14 @@ for rdn in range(episodes):
     #graph, distances = ngraph, ndistances
 
     list_unweighted_edges = update_edges
+    #Q_matrix = np.ones((len(rts), len(rts))) * new_q
 
 
 
 print('Actions:', Actions)
 print('Reward:', Min_value)
 
-#print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s seconds ---" % (time.time() - start_time))
 
 print('Round:', Episode)
 print('Average_Delay:', Average_Delay)
