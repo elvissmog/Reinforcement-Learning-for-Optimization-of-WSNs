@@ -25,6 +25,7 @@ def build_graph(positions, links):
     for u, v in links:
         # G.add_edge(u, v, weight = 1)
         G.add_edge(u, v, weight = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow((position_array[u][1] - position_array[v][1]), 2)))
+
     z = Yamada(graph = G, n_trees=100)
     all_msts = z.spanning_trees()
     node_neigh = []
@@ -62,6 +63,9 @@ def build_graph(positions, links):
 
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
 
+# Adding unweighted edges to the Graph
+list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
+
 
 #xy2 = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (54, 58)]
 
@@ -82,11 +86,6 @@ for index in range(len(xy2)):
 
 
 
-
-# Adding unweighted edges to the Graph
-list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
-
-
 # initialization of network parameters
 
 discount_factor = 0
@@ -101,7 +100,11 @@ packet_gen_rate = 2    # per seconds
 learning_period = 10    # secs
 
 
-epsilon = 0.1
+
+epsilon = 0.5
+START_EPSILON_DECAYING = 1
+END_EPSILON_DECAYING = epsilon//2
+epsilon_decay_value = epsilon/(END_EPSILON_DECAYING - START_EPSILON_DECAYING)
 episodes = 2000
 
 
@@ -131,7 +134,7 @@ start_time = time.time()
 
 for rdn in range(episodes):
 
-    print("Edges:", list_unweighted_edges)
+    #print("Edges:", list_unweighted_edges)
 
 
     initial_state = random.choice(range(0, len(rts), 1))
@@ -145,12 +148,13 @@ for rdn in range(episodes):
 
     current_state = initial_state
 
-    if np.random.random() >= 1 - epsilon:
-        # Get action from Q table
-        action = random.choice(available_actions)
-    else:
+    if np.random.random() > epsilon:
         # Get random action
         action = np.argmax(q_matrix[current_state, :])
+
+    else:
+        # Get action from Q table
+        action = random.choice(available_actions)
 
     y = action + 1
     Actions.append(y)
@@ -239,8 +243,8 @@ for rdn in range(episodes):
             
             dead_node= index
     
-            print("dead: ", dead_node)
-            print("Last Edges:",list_unweighted_edges)
+            #print("dead: ", dead_node)
+            #print("Last Edges:",list_unweighted_edges)
 
     for ind in list_unweighted_edges:
         if ind[0] != dead_node and ind[1] != dead_node:
@@ -253,11 +257,11 @@ for rdn in range(episodes):
     #print('Episode:',round)
 
 
-    print('Original edges:', list_unweighted_edges)
+    #print('Original edges:', list_unweighted_edges)
     if cost == 1:
         print('cost:', cost)
-        print('new nodes:', xy)
-        print('Updated edges:', update_edges)
+        #print('new nodes:', xy)
+        #print('Updated edges:', update_edges)
         #print('Original edges:', list_unweighted_edges)
         try:
             graph, rts, rtp, E_vals, q_matrix = build_graph(xy, update_edges)
@@ -280,6 +284,10 @@ for rdn in range(episodes):
 
     list_unweighted_edges = update_edges
     #Q_matrix = np.ones((len(rts), len(rts))) * new_q
+
+    # Decaying is being done every episode if episode number is within decaying range
+    if END_EPSILON_DECAYING >= episodes >= START_EPSILON_DECAYING:
+        epsilon -= epsilon_decay_value
 
 
 print('Actions:', Actions)
