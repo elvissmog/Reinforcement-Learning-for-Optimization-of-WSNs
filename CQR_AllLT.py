@@ -101,7 +101,7 @@ learning_period = 10    # secs
 
 
 
-epsilon = 0.5
+epsilon = 0.1
 START_EPSILON_DECAYING = 1
 END_EPSILON_DECAYING = epsilon//2
 epsilon_decay_value = epsilon/(END_EPSILON_DECAYING - START_EPSILON_DECAYING)
@@ -149,11 +149,12 @@ for rdn in range(episodes):
     current_state = initial_state
 
     if np.random.random() > epsilon:
-        # Get random action
+        # Get action from Q table
         action = np.argmax(q_matrix[current_state, :])
 
     else:
-        # Get action from Q table
+        
+         # Get random action
         action = random.choice(available_actions)
 
     y = action + 1
