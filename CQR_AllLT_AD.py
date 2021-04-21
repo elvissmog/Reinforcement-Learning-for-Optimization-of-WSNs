@@ -8,7 +8,7 @@ import time
 
 from AllMst import Yamada
 
-sink_node = 5
+sink_node = 99
 
 
 def build_graph(positions, links):
@@ -105,6 +105,7 @@ Episode = []
 Average_Delay = []
 E_consumed = []
 EE_consumed = []
+No_Alive_Node = []
 
 graph, rts, rtp, E_vals, q_matrix = build_graph(xy, list_unweighted_edges)
 
@@ -202,7 +203,7 @@ for rdn in range(episodes):
     Average_Delay.append(sum(Delay) / len(Delay))
     E_consumed.append(tx_energy + rx_energy + ctx_energy + crx_energy)
     EE_consumed.append(sum(E_consumed))
-
+    No_Alive_Node.append(len(position_array))
     cost = 0
 
     dead_node = []
@@ -266,11 +267,13 @@ for rdn in range(episodes):
         # print('Updated edges:', update_edges)
         #print('new updated edges:', list_unweighted_edges)
         #print('len new edge:', len(list_unweighted_edges))
+        print('Round:', rdn)
+        print('Dead node:', dead_node)
         print('Updated Evals:', update_evals)
         print('Q Matrix:', q_matrix)
         print('current-action:', (current_state , action))
+        print('Reward:', reward)
         print('new q:', new_q)
-        print('Dead node:', dead_node)
         #print('length Updated Evals:', len(update_evals))
         #print('hey new edges', test)
         #print('length of test', len(test))
@@ -319,6 +322,12 @@ plt.plot(Episode, Actions)
 plt.xlabel('Round')
 plt.ylabel('Discrete Action')
 plt.title('Selected Action for each round')
+plt.show()
+
+plt.plot(Episode, No_Alive_Node)
+plt.xlabel('Round')
+plt.ylabel('NAN')
+plt.title('Number of Alive Nodes in each Round')
 plt.show()
 
 plt.plot(Episode, Average_Delay)
