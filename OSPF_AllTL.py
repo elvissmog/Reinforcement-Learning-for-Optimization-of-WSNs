@@ -28,10 +28,8 @@ def build_graph(positions, links):
 
     shortest_paths = {}
     for n in G.nodes:
-        try:
-            path = nx.dijkstra_path(G, source=n, target=sink_node, weight='weight')
-        except KeyError:
-            break
+        path = nx.dijkstra_path(G, source=n, target=sink_node, weight='weight')
+        
         shortest_paths[n] = path
 
     # Energy consumption
@@ -52,7 +50,7 @@ xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
 # Adding unweighted edges to the Graph
 list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
 
-'''
+"""
 xy2 = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77),
        (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99),
        (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17),
@@ -179,8 +177,7 @@ list_unweighted_edges = [(48, 50), (33, 29), (49, 68), (66, 44), (6, 44), (8, 18
                          (87, 68), (75, 78), (24, 1), (40, 46), (45, 19), (85, 4), (62, 25), (67, 21), (33, 30),
                          (11, 0), (26, 51), (81, 77), (19, 31), (54, 70), (24, 63), (27, 78), (81, 63), (16, 69),
                          (17, 73), (85, 34), (93, 81), (13, 32), (36, 63)]
-
-'''
+"""
 
 # initialization of network parameters
 
@@ -273,7 +270,7 @@ for rdn in range(episodes):
 
     for index, item in E_vals.items():
 
-        if item <= 0:
+        if item <= 0.01:
             # print('Index:', index)
             # print('Evals:', E_vals)
             # print('Current Q:', q_matrix)
@@ -290,7 +287,7 @@ for rdn in range(episodes):
 
     list_unweighted_edges = test
 
-    update_evals = {index: item for index, item in E_vals.items() if item > 0}
+    update_evals = {index: item for index, item in E_vals.items() if item > 0.01}
 
     # print('dead nodes:', dead_node)
     # print("positions:", xy)
@@ -328,11 +325,12 @@ for rdn in range(episodes):
             graph, stp , E_vals = build_graph(xy, list_unweighted_edges)
 
             E_vals = update_evals
+          
 
             # print("Updated Evals:", E_vals)
 
 
-        except KeyError:
+        except nx.exception.NetworkXNoPath:
             # Error = messagebox.showinfo("Enter proper values")
             break
 
