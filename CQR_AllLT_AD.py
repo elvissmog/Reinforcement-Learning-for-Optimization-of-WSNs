@@ -91,12 +91,13 @@ amplifier_energy = 100e-12  # Joules/bit/square meter
 transmission_range = 30  # meters
 packet_gen_rate = 2  # per seconds
 learning_period = 10  # secs
+bit_rate = 80    # bit rate
 
 epsilon = 0.5
 START_EPSILON_DECAYING = 1
 END_EPSILON_DECAYING = epsilon // 2
 epsilon_decay_value = epsilon / (END_EPSILON_DECAYING - START_EPSILON_DECAYING)
-episodes = 2000
+episodes = 20000
 
 Q_value = []
 Min_value = []
@@ -210,7 +211,7 @@ for rdn in range(episodes):
 
     for index, item in E_vals.items():
 
-        if item <= 0:
+        if item <= 0.01:
             #print('Index:', index)
             #print('Evals:', E_vals)
             #print('Current Q:', q_matrix)
@@ -223,13 +224,6 @@ for rdn in range(episodes):
                 xy.pop(index)
 
 
-
-    for inx, ind in enumerate(list_unweighted_edges):
-        """for idx in dead_node:
-            if ind[1] is idx or ind[0] is idx:
-                remove_edges.append(ind)
-                list_unweighted_edges.remove(ind)
-		"""
 
     test = [(item1, item2) for item1,item2 in list_unweighted_edges if item1 not in dead_node and item2 not in dead_node]
     
@@ -293,8 +287,8 @@ for rdn in range(episodes):
             break
 
     # Decaying is being done every episode if episode number is within decaying range
-    '''if END_EPSILON_DECAYING >= episodes >= START_EPSILON_DECAYING:
-        epsilon -= epsilon_decay_value'''
+    if END_EPSILON_DECAYING >= episodes >= START_EPSILON_DECAYING:
+        epsilon -= epsilon_decay_value
 
     dead_node = []
     #print('Q-matrix:', q_matrix)
