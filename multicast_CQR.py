@@ -25,8 +25,8 @@ for u, v in list_unweighted_edges:
     G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
 
 # initialization of network parameters
-discount_factor = 0.5
-learning_rate = 0.5
+discount_factor = 0
+learning_rate = 0.7
 initial_energy = 0.5                  # Joules
 packet_size = 512                     # bits
 electronic_energy = 50e-9            # Joules/bit 5
@@ -40,7 +40,7 @@ Erx=[[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values  =[[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.1
-episodes = 100
+episodes = 200000
 
 sink_node = 5
 
@@ -78,7 +78,7 @@ for T in all_MSTs:
 	MSTs_hop_count.append(hop_counts)
 	MST_paths.append(MST_path)
 	
-print('All paths', MST_paths)
+#print('All paths', MST_paths)
 
 
 
@@ -93,6 +93,9 @@ Episode = []
 delay = []
 E_consumed = []
 EE_consumed = []
+
+
+start_time = time.time()
 
 for i in range(episodes):
 
@@ -119,7 +122,7 @@ for i in range(episodes):
 
    
     chosen_MST = MST_paths[action]
-    print(chosen_MST)
+    #print(chosen_MST)
 
     for node in chosen_MST:
         counter = 0
@@ -167,15 +170,18 @@ for i in range(episodes):
 
 
 
-print('Reward:', Min_value)
 
-#print("--- %s seconds ---" % (time.time() - start_time))
-print(Actions)
-'''print('Round:', Episode)
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
+'''
+print('Reward:', Min_value)
+print('Round:', Episode)
 #print('Delay:', delay)
 print('Total Energy:', EE_consumed)
 print('Energy:', E_consumed)
 print('QVals:', Q_value)
+'''
 
 plt.plot(Episode, Q_value, label = "Q-Value")
 plt.plot(Episode, Min_value, label = "Reward")
@@ -201,11 +207,4 @@ plt.plot(Episode, EE_consumed)
 plt.xlabel('Round')
 plt.ylabel('Total Energy Consumption (Joules)')
 #plt.title('Total Energy Consumption for each round')
-plt.show()'''
-
-
-
-
-
-
-   
+plt.show()

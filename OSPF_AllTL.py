@@ -30,9 +30,9 @@ def build_graph(positions, links):
     for n in G.nodes:
         try:
             path = nx.dijkstra_path(G, source=n, target=sink_node, weight='weight')
-            shortest_paths[n] = path
         except KeyError:
             break
+        shortest_paths[n] = path
 
     # Energy consumption
     e_vals = {}
