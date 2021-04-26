@@ -21,8 +21,8 @@ for node in sorted(G):
     position_array.append(G.nodes[node]['pos'])
 distances = squareform(pdist(np.array(position_array)))
 for u, v in list_unweighted_edges:
-    #G.add_edge(u, v, weight = 1)
-    G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
+    G.add_edge(u, v, weight = 1)
+    #G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
 
 # initialization of network parameters
 discount_factor = 0
@@ -31,7 +31,7 @@ initial_energy = 0.5                  # Joules
 packet_size = 512                     # bits
 electronic_energy = 50e-9            # Joules/bit 5
 amplifier_energy = 100e-12           # Joules/bit/square meter
-transmission_range = 30               # meters
+transmission_range = 3               # meters
 pathloss_exponent = 2                 # constant
 
 d =[[0 for i in range(len(G))] for j in range(len(G))]
@@ -52,7 +52,7 @@ for i in range(len(G)):
 			Erx[i][j] =  electronic_energy * packet_size
 
 
-Y = Yamada(G)
+Y = Yamada(graph=G, n_trees=100)
 all_MSTs = Y.spanning_trees()
 
 #the set of neighbors of all nodes in each MST
@@ -80,7 +80,7 @@ for T in all_MSTs:
 	
 #print('All paths', MST_paths)
 
-
+print('distance:', d)
 
 Q_matrix = np.zeros((len(all_MSTs), len(all_MSTs)))
 initial_state = random.choice(range(0, len(all_MSTs), 1))
@@ -93,7 +93,7 @@ Episode = []
 delay = []
 E_consumed = []
 EE_consumed = []
-
+Packet_Drop = []
 
 start_time = time.time()
 
@@ -123,23 +123,29 @@ for i in range(episodes):
    
     chosen_MST = MST_paths[action]
     #print(chosen_MST)
-
+    packet_drop = []
     for node in chosen_MST:
         counter = 0
+        pd = 0
         while counter < len(chosen_MST[node])-1:
             init_node = chosen_MST[node][counter]
             next_node = chosen_MST[node][counter + 1]
-            E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
-            # E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
+            if d[init_node][next_node] <= transmission_range:
+                E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
+                E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
+            else:
+                pd += 1
+                continue
             tx_energy += Etx[init_node][next_node]
             rx_energy += Erx[init_node][next_node]
             counter += 1
-            #print("counter", counter)
 
-    		
+    packet_drop.append(pd)
+        #print("counter", counter)
+
 
     
-    reward = min(E_vals)
+    reward = min(E_vals)/initial_energy + pd/len(G.nodes)
     Min_value.append(reward)
     # Maximum possible Q value in next step (for new state)
     max_future_q = np.max(Q_matrix[action, :])
@@ -157,6 +163,7 @@ for i in range(episodes):
     delay.append(initial_delay)
     E_consumed.append(tx_energy + rx_energy)
     EE_consumed.append(sum(E_consumed))
+    Packet_Drop.append(sum(packet_drop))
 
     cost = True
     for item in E_vals:
@@ -171,6 +178,8 @@ for i in range(episodes):
 
 
 
+
+print('packet drop:', Packet_Drop)
 
 print("--- %s seconds ---" % (time.time() - start_time))
 

@@ -99,7 +99,7 @@ class Yamada(object):
         n_trees (int): maximum number of trees to return.
     """
 
-    def __init__(self, graph, n_trees=1000):                # np.inf
+    def __init__(self, graph, n_trees=np.inf):                # np.inf
         """
         Args:
             graph (nx.Graph): graph to find all minimum spanning trees for.
