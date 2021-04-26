@@ -48,7 +48,7 @@ initial_energy = 0.5                  # Joules
 packet_size = 512                     # bits
 electronic_energy = 50e-9            # Joules/bit 5
 amplifier_energy = 100e-12           # Joules/bit/square meter
-transmission_range = 30               # meters
+transmission_range = 35               # meters
 pathloss_exponent = 2                 # constant
 
 d =[[0 for i in range(len(G))] for j in range(len(G))]
@@ -197,15 +197,18 @@ for i in range(episodes):
         pdd = pd
 
         packet_drop.append(pdd)
+    sum_pd = sum(packet_drop)
 
-        
-  
-        #print("counter", counter)
+    if sum_pd==0:
+    	reward = min(E_vals)/initial_energy
 
+    else:
 
+    	reward = min(E_vals)/initial_energy + 1/(sum_pd/(len(G.nodes)-1))
     
-    reward = min(E_vals)/initial_energy + 1/(sum(packet_drop)/(len(G.nodes)-1))
     Min_value.append(reward)
+
+
     # Maximum possible Q value in next step (for new state)
     max_future_q = np.max(Q_matrix[action, :])
 
