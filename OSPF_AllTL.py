@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 import time
 
-sink_node = 5
+sink_node = 99
 
 
 def build_graph(positions, links):
@@ -44,7 +44,7 @@ def build_graph(positions, links):
     return G, shortest_paths, e_vals
 
 
-
+"""
 xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
 
 # Adding unweighted edges to the Graph
@@ -177,7 +177,7 @@ list_unweighted_edges = [(48, 50), (33, 29), (49, 68), (66, 44), (6, 44), (8, 18
                          (87, 68), (75, 78), (24, 1), (40, 46), (45, 19), (85, 4), (62, 25), (67, 21), (33, 30),
                          (11, 0), (26, 51), (81, 77), (19, 31), (54, 70), (24, 63), (27, 78), (81, 63), (16, 69),
                          (17, 73), (85, 34), (93, 81), (13, 32), (36, 63)]
-"""
+
 
 # initialization of network parameters
 
