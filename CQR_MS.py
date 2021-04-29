@@ -11,7 +11,7 @@ from AllMst import Yamada
 G = nx.Graph()
 #xy = [(1, 3), (2.5, 5), (2.5, 1), (4.5, 5), (4.5, 1), (6, 3)]
 #xy = [(1, 2), (7, 2), (4, 0), (4, 6)]
-xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (54, 58)]
+xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (50, 50)]
 
 for i in range(len(xy)):
     G.add_node(i, pos=xy[i])
@@ -31,24 +31,24 @@ for u, v in list_unweighted_edges:
 
 # initialization of network parameters
 
-discount_factor = 0
-learning_rate = 0.9
-initial_energy = 1  # Joules
+discount_factor = 0.0
+learning_rate = 0.7
+initial_energy = 2  # Joules
 data_packet_size = 256  # bits
-control_packet_size = 96 #bits
+control_packet_size = 48 #bits
 electronic_energy = 50e-9  # Joules/bit 5
-amplifier_energy = 100e-12  # Joules/bit/square meter
-transmission_range = 30  # meters
-pathloss_exponent = 2  # constant
+e_fs = 10e-12  # Joules/bit/(meter)**2
+e_mp = 0.0013e-12 #Joules/bit/(meter)**4
+
+
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
 Ctx = [[0 for i in range(len(G))] for j in range(len(G))]
 Crx = [[0 for i in range(len(G))] for j in range(len(G))]
-path_Q_values = [[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
-epsilon = 0.1
+epsilon = 0.0
 episodes = 200000
 
 #sink_node = 5
@@ -56,15 +56,23 @@ sink_node = 99
 
 E_vals[sink_node] = 50
 
+d_o = math.sqrt(e_fs/e_mp)
+
 for i in range(len(G)):
     for j in range(len(G)):
         if i != j:
             d[i][j] = math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
                 (position_array[i][1] - position_array[j][1]), 2))
             #d[i][j] = 1
-            Etx[i][j] = electronic_energy * data_packet_size + amplifier_energy * data_packet_size * math.pow((d[i][j]),pathloss_exponent)
+            if d[i][j] <= d_o:
+                Etx[i][j] = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow((d[i][j]), 2)
+            else:
+                Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
             Erx[i][j] = electronic_energy * data_packet_size
-            Ctx[i][j] = electronic_energy * control_packet_size + amplifier_energy * control_packet_size * math.pow((d[i][j]),pathloss_exponent)
+            if d[i][j] <= d_o:
+                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 2)
+            else:
+                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 4)
             Crx[i][j] = electronic_energy * control_packet_size
 
 Y = Yamada(graph=G, n_trees=100)
@@ -123,18 +131,17 @@ for i in range(episodes):
     current_state = initial_state
 
     if random.random() >= 1 - epsilon:
-        # Get action from Q table
+        # Get random action
         action = random.choice(available_actions)
     else:
-        # Get random action
-        #action = np.argmax(Q_matrix[current_state, :])
+        # Get action from Q table
         action = np.argmin(Q_matrix[current_state, :])
 
 
     initial_state = action
 
     chosen_ST = ST_paths[action]
-    Action.append(action)
+    Action.append(action + 1)
 
     for node in chosen_ST:
         counter = 0
@@ -148,8 +155,8 @@ for i in range(episodes):
             counter += 1
 
 
-    #reward = min(E_vals)
-    reward = tx_energy + rx_energy
+    energy_consumption = tx_energy + rx_energy
+    reward = energy_consumption
     Min_value.append(reward)
 
     for node in chosen_ST:
@@ -184,7 +191,7 @@ for i in range(episodes):
 
     cost = True
     for index, item in enumerate(E_vals):
-        if item <= 0.0001:
+        if item <= 0.0000000000001:
             print('E_vals:', E_vals)
             print('index:', index)
             cost = False
