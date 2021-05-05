@@ -17,7 +17,7 @@ for i in range(len(xy)):
 # Adding unweighted edges to the Graph
 list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
 '''
-xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (54, 58)]
+xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (50, 50)]
 for i in range(len(xy)):
 	G.add_node(i, pos=xy[i])
 
@@ -34,24 +34,30 @@ for u, v in list_unweighted_edges:
     G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
 
 # initialization of network parameters
-discount_factor = 1
-learning_rate = 0.3
-initial_energy = 5  # Joules
-packet_size = 216  # bits
+discount_factor = 0
+learning_rate = 0.7
+initial_energy = 2  # Joules
+data_packet_size = 256  # bits
+control_packet_size = 48 #bits
 electronic_energy = 50e-9  # Joules/bit 5
-amplifier_energy = 100e-12  # Joules/bit/square meter
-transmission_range = 30  # meters
-pathloss_exponent = 2  # constant
+e_fs = 10e-12  # Joules/bit/(meter)**2
+e_mp = 0.0013e-12 #Joules/bit/(meter)**4
+
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
-path_Q_values = [[0 for i in range(len(G))] for j in range(len(G))]
+Ctx = [[0 for i in range(len(G))] for j in range(len(G))]
+Crx = [[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
-epsilon = 0.1
-episodes = 200000
+epsilon = 0.0
+episodes = 2
 
 sink_node = 99
+
+E_vals[sink_node] = 50
+
+d_o = math.sqrt(e_fs/e_mp)
 
 # Getting the initial residual energy of the sensor nodes apart from the sink node
 E_vals_sensors = []
@@ -65,9 +71,19 @@ for i in range(len(G)):
         if i != j:
             d[i][j] = math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
                 (position_array[i][1] - position_array[j][1]), 2))
-            Etx[i][j] = electronic_energy * packet_size + amplifier_energy * packet_size * math.pow((d[i][j]),
-                                                                                                    pathloss_exponent)
-            Erx[i][j] = electronic_energy * packet_size
+            # d[i][j] = 1
+            if d[i][j] <= d_o:
+                Etx[i][j] = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow((d[i][j]), 2)
+            else:
+                Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
+            Erx[i][j] = electronic_energy * data_packet_size
+            if d[i][j] <= d_o:
+                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]),
+                                                                                                            2)
+            else:
+                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]),
+                                                                                                            4)
+            Crx[i][j] = electronic_energy * control_packet_size
 
 Y = Yamada(graph=G, n_trees=100)
 all_MSTs = Y.spanning_trees()
@@ -99,7 +115,7 @@ for T in all_MSTs:
 
 Q_matrix = np.zeros((len(all_MSTs), len(all_MSTs)))
 # Initializing the Q_value of the controller as the negative summation of the residual energy of the sensor nodes using equation (6) in the base paper (Optimizing the Lifetime of Software Defined Wireless Sensor Network via  Reinforcement Learning)
-Q_matrix = Q_matrix * (-sum(E_vals_sensors))
+#Q_matrix = Q_matrix * (-sum(E_vals_sensors))
 initial_state = random.choice(range(0, len(all_MSTs), 1))
 
 Q_value = []
@@ -115,39 +131,48 @@ for i in range(episodes):
     delay = 0
     tx_energy = 0
     rx_energy = 0
+    ctx_energy = 0
+    crx_energy = 0
     Episode.append(i)
     available_actions = [*range(0, len(all_MSTs), 1)]
 
     current_state = initial_state
 
-    if np.random.random() >= 1 - epsilon:
-        # Get action from Q table
+    if random.random() >= 1 - epsilon:
+        # Get random action
         action = random.choice(available_actions)
     else:
-        # Get random action
-        action = np.argmax(Q_matrix[current_state, :])
+        # Get action from Q table
+        action = np.argmin(Q_matrix[current_state, :])
 
     Actions.append(action)
 
     initial_state = action
-    #print('action is:', action)
-    #print('MST_paths:', MST_paths)
     chosen_MST = MST_paths[action]
-    #print('chosen MST:', chosen_MST)
+    #print('chosen_MST:', chosen_MST)
+
+
     Delay = []
+    path_energy = []
     for node in chosen_MST:
         counter = 0
+        pt_energy = []
         while counter < len(chosen_MST[node]) - 1:
             init_node = chosen_MST[node][counter]
             next_node = chosen_MST[node][counter + 1]
             E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
             E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
+            path_transmission_energy = Etx[init_node][next_node]
+            path_reception_energy = Erx[init_node][next_node]
             tx_energy += Etx[init_node][next_node]
             rx_energy += Erx[init_node][next_node]
             delay += d[init_node][next_node]
+            pt_energy.append(path_transmission_energy + path_reception_energy)
             counter += 1
         Delay.append(delay)
-            #print("counter", counter)
+        path_energy.append(pt_energy)
+
+    print('Path_Energy:', path_energy)
 
     # Calculating the reward based on global energy loss using equation (1) in the base paper
     Global_Energy_Loss = []
@@ -155,30 +180,49 @@ for i in range(episodes):
         # Estimated node residual energy (enre)
         enre = E_vals[node]
         # The list storing the sensor nodes residual energies along the path use by a particular sensor node in sending packet to the sink
-        E = []
+
         for item in chosen_MST[node]:
-            y = E_vals[item]
-            E.append(y)
-            # The estimated path residual energy (epre)
-            epre = enre - min(np.array(E))
-            energy_loss = epre - enre
-        Global_Energy_Loss.append(energy_loss)
+            E = []
+            if item != sink_node:
+                y = E_vals[item]
+                E.append(y)
+                # The estimated path residual energy (epre)
+                epre = enre - min(E)
+                energy_loss = epre - enre
+                Global_Energy_Loss.append(energy_loss)
+    #print('Global Loss:', Global_Energy_Loss)
+    min_path_energy = []
+    for item in path_energy:
+        min_path_energy.append(min(item))
 
 
-    reward = sum(Global_Energy_Loss)
-    #reward = min(E_vals) / sum(E_vals)
-    #reward = min(E_vals)
+
+    #reward = sum(Global_Energy_Loss)
+    reward = min(min_path_energy)
     Min_value.append(reward)
+
+    for node in chosen_MST:
+        counter = 0
+        while counter < len(chosen_MST[node]) - 1:
+            init_node = chosen_MST[node][counter]
+            next_node = chosen_MST[node][counter + 1]
+            E_vals[init_node] = E_vals[init_node] - Ctx[init_node][next_node]  # update the start node energy
+            E_vals[next_node] = E_vals[next_node] - Crx[init_node][next_node]  # update the next hop energy
+            ctx_energy += Ctx[init_node][next_node]
+            crx_energy += Crx[init_node][next_node]
+            counter += 1
+
+
     # Maximum possible Q value in next step (for new state)
     max_future_q = np.max(Q_matrix[action, :])
 
     # Current Q value (for current state and performed action)
     current_q = Q_matrix[current_state, action]
     # And here's our equation for a new Q value for current state and action
-    #new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
+    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
     # The updating Q-Learning equation (5) as contain in the base paper
-    new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor * reward
-    # new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
+    #new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor * reward
+
     Q_value.append(new_q)
 
     # Update Q table with new Q value
@@ -190,7 +234,7 @@ for i in range(episodes):
 
     cost = True
     for item in E_vals:
-        if item <= 0:
+        if item <= 0.01:
             cost = False
             print("Energy cannot be negative!")
             print("The final round is", i)
@@ -202,11 +246,12 @@ print('Reward:', Min_value)
 
 # print("--- %s seconds ---" % (time.time() - start_time))
 
-print('Round:', Episode)
-print('Average_Delay:', Average_Delay)
-print('Total Energy:', EE_consumed)
-print('Energy:', E_consumed)
-print('QVals:', Q_value)
+print('Action:', Actions)
+#print('Round:', Episode)
+#print('Average_Delay:', Average_Delay)
+#print('Total Energy:', EE_consumed)
+#print('Energy:', E_consumed)
+#print('QVals:', Q_value)
 
 plt.plot(Episode, Q_value, label="Q-Value")
 plt.plot(Episode, Min_value, label="Reward")
