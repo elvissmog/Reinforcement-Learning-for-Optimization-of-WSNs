@@ -51,13 +51,15 @@ Erx = [[0 for i in range(len(G))] for j in range(len(G))]
 Ctx = [[0 for i in range(len(G))] for j in range(len(G))]
 Crx = [[0 for i in range(len(G))] for j in range(len(G))]
 initial_E_vals = [initial_energy for i in range(len(G))]
-epsilon = 0.0
+ref_E_vals = [initial_energy for i in range(len(G))]
+epsilon = 0.1
 episodes = 200000
 
 #sink_node = 5
 sink_node = 3
 
 initial_E_vals[sink_node] = 50
+ref_E_vals[sink_node] = 50
 
 d_o = math.sqrt(e_fs/e_mp)
 
@@ -66,7 +68,7 @@ for i in range(len(G)):
         if i != j:
             d[i][j] = math.ceil((math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
                 (position_array[i][1] - position_array[j][1]), 2)))/10)
-            #d[i][j] = 1
+
             if d[i][j] <= d_o:
                 Etx[i][j] = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow((d[i][j]), 2)
             else:
@@ -78,7 +80,7 @@ for i in range(len(G)):
                 Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 4)
             Crx[i][j] = electronic_energy * control_packet_size
 
-print('distance:', d)
+#print('distance:', d)
 Y = Yamada(graph=G, n_trees=np.inf)
 all_STs = Y.spanning_trees()
 
@@ -111,7 +113,7 @@ print('length all ST:', len(ST_paths))
 #Q_matrix = np.array([[None for i in range(len(all_STs))] for j in range(len(all_STs))])
 Q_matrix = np.zeros((len(all_STs), len(all_STs)))
 initial_state = random.choice(range(0, len(all_STs), 1))
-print('initial_state:', initial_state)
+#print('initial_state:', initial_state)
 
 Q_value = []
 Action = []
@@ -165,9 +167,12 @@ for i in range(episodes):
             counter += 1
         ETX.append(tx_energy)
         ERX.append(rx_energy)
-
-    current_E_vals = initial_E_vals
-    reward = min([initial_E_vals[i] - current_E_vals[i] for i in G.nodes])
+    #print('ref Evals:', ref_E_vals)
+    #print('initial Energy:', initial_E_vals)
+    #current_E_vals = initial_E_vals
+    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i != sink_node]
+    #print('Energy Consumption:', Energy_Consumption)
+    reward = max(Energy_Consumption)
 
     #reward = (tx_energy + rx_energy)
     #reward = min(E_vals)
@@ -207,30 +212,34 @@ for i in range(episodes):
     EE_consumed.append(sum(E_consumed))
 
     cost = True
-    for index, item in enumerate(current_E_vals):
+    for index, item in enumerate(initial_E_vals):
         if item <= 0.01:
-            print('E_vals:', current_E_vals)
-            print('Lowest Node Energy:', current_E_vals[index])
+            print('E_vals:', initial_E_vals)
+            print('Lowest Node Energy:', initial_E_vals[index])
             cost = False
             print("Energy cannot be negative!")
             print("The final round is", i)
 
     if not cost:
         break
-    initial_E_vals = current_E_vals
+    #ref_E_vals = initial_E_vals
+    for i in range(len(ref_E_vals)):
+        ref_E_vals[i] = initial_E_vals[i]
+
 
 print('Actions:', Action)
 print("--- %s seconds ---" % (time.time() - start_time))
 
-'''print('Reward:', Min_value)
+'''
+print('Reward:', Min_value)
 print('Round:', Episode)
 #print('Delay:', delay)
 print('Total Energy:', EE_consumed)
 print('Energy:', E_consumed)
-'''
 
+'''
 plt.plot(Episode, Q_value, label="Q-Value")
-plt.plot(Episode, Min_value, label="Reward")
+#plt.plot(Episode, Min_value, label="Reward")
 plt.xlabel('Round')
 plt.ylabel('Q-Value')
 # plt.title('Q-Value Convergence')
