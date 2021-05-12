@@ -9,9 +9,10 @@ import time
 from AllMst import Yamada
 
 G = nx.Graph()
+transmission_range = 10
 #xy = [(1, 3), (2.5, 5), (2.5, 1), (4.5, 5), (4.5, 1), (6, 3)]
 #xy = [(1, 2), (7, 2), (4, 0), (4, 6)]
-xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (54, 58)]
+xy = [(14, 82), (10, 19), (80, 34), (54, 8), (66, 40), (1, 12), (24, 69), (56, 78), (57, 76), (38, 91), (1, 77), (77, 35), (96, 89), (0, 64), (23, 72), (49, 52), (79, 39), (39, 48), (56, 45), (63, 3), (15, 13), (80, 99), (57, 86), (9, 54), (97, 25), (17, 11), (70, 38), (92, 80), (94, 90), (5, 36), (9, 89), (18, 91), (80, 17), (41, 25), (66, 78), (21, 66), (90, 4), (64, 71), (8, 61), (89, 84), (70, 10), (83, 84), (62, 41), (22, 71), (9, 70), (23, 91), (56, 54), (72, 49), (80, 98), (75, 32), (46, 70), (65, 99), (91, 96), (85, 100), (82, 87), (92, 87), (13, 45), (28, 18), (25, 64), (41, 29), (93, 32), (58, 73), (45, 84), (4, 59), (31, 52), (40, 28), (51, 79), (2, 60), (71, 100), (17, 37), (21, 35), (31, 32), (71, 76), (89, 47), (50, 42), (40, 23), (92, 21), (53, 21), (76, 53), (95, 88), (72, 91), (93, 66), (19, 26), (83, 85), (0, 62), (84, 2), (4, 39), (41, 44), (70, 81), (19, 12), (94, 90), (57, 61), (99, 2), (94, 69), (46, 97), (22, 19), (38, 20), (90, 73), (48, 21), (50, 50)]
 
 for i in range(len(xy)):
     G.add_node(i, pos=xy[i])
@@ -28,53 +29,58 @@ for node in sorted(G):
 distances = squareform(pdist(np.array(position_array)))
 for u, v in list_unweighted_edges:
     #G.add_edge(u, v, weight = 1)
-    G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
+    #G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
+    distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
+        (position_array[u][1] - position_array[v][1]), 2))
+    nor_distance = math.ceil(distance / transmission_range)
+    G.add_edge(u, v, weight=nor_distance)
 
 # initialization of network parameters
 
-initial_energy = 1  # Joules
+initial_energy = 10  # Joules
 data_packet_size = 256  # bits
-control_packet_size = 96 #bits
+control_packet_size = 48 #bits
 electronic_energy = 50e-9  # Joules/bit 5
-amplifier_energy = 100e-12  # Joules/bit/square meter
-transmission_range = 30  # meters
-pathloss_exponent = 2  # constant
+e_fs = 10e-12  # Joules/bit/(meter)**2
+e_mp = 0.0013e-12 #Joules/bit/(meter)**4
+node_energy_limit = 0.001
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
 Ctx = [[0 for i in range(len(G))] for j in range(len(G))]
 Crx = [[0 for i in range(len(G))] for j in range(len(G))]
-path_Q_values = [[0 for i in range(len(G))] for j in range(len(G))]
-E_vals = [initial_energy for i in range(len(G))]
+initial_E_vals = [initial_energy for i in range(len(G))]
+ref_E_vals = [initial_energy for i in range(len(G))]
+
 
 episodes = 200000
 
 sink_node = 99
-E_vals[sink_node] = 50
+initial_E_vals[sink_node] = 50
+ref_E_vals[sink_node] = 50
+
+d_o = math.sqrt(e_fs/e_mp)/transmission_range
 
 for i in range(len(G)):
     for j in range(len(G)):
         if i != j:
-            d[i][j] = math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
-                (position_array[i][1] - position_array[j][1]), 2))
-            #d[i][j] = 1
-            Etx[i][j] = electronic_energy * data_packet_size + amplifier_energy * data_packet_size * math.pow((d[i][j]),pathloss_exponent)
+            d[i][j] = (math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
+                (position_array[i][1] - position_array[j][1]), 2))) / transmission_range
+
+            if d[i][j] <= d_o:
+                Etx[i][j] = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow((d[i][j]), 2)
+            else:
+                Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
             Erx[i][j] = electronic_energy * data_packet_size
-            Ctx[i][j] = electronic_energy * control_packet_size + amplifier_energy * control_packet_size * math.pow((d[i][j]),pathloss_exponent)
+            if d[i][j] <= d_o:
+                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 2)
+            else:
+                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 4)
             Crx[i][j] = electronic_energy * control_packet_size
 
-Y = Yamada(graph=G, n_trees=100)
+Y = Yamada(graph=G, n_trees = 20)
 all_STs = Y.spanning_trees()
-
-# the set of neighbors of all nodes in each MST
-node_neigh = []
-for T in all_STs:
-    node_neighT = {}
-    for n in T.nodes:
-        node_neighT[n] = list(T.neighbors(n))
-    node_neigh.append(node_neighT)
-# print(node_neigh)
 
 # Ranking nodes in terms of hop count to sink for each MST
 STs_hop_count = []
@@ -90,8 +96,8 @@ for T in all_STs:
     STs_hop_count.append(hop_counts)
     ST_paths.append(ST_path)
 
-print('All paths:', ST_paths)
-print('length all ST:', len(ST_paths))
+#print('All paths:', ST_paths)
+#print('length all ST:', len(ST_paths))
 
 Action = []
 Min_value = []
@@ -114,23 +120,25 @@ for i in range(episodes):
 
     action = random.choice(available_actions)
     chosen_ST = ST_paths[action]
-    Action.append(action)
+    Action.append(action + 1)
 
     for node in chosen_ST:
         counter = 0
         while counter < len(chosen_ST[node]) - 1:
             init_node = chosen_ST[node][counter]
             next_node = chosen_ST[node][counter + 1]
-            E_vals[init_node] = E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
-            E_vals[next_node] = E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
+            initial_E_vals[init_node] = initial_E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
+            initial_E_vals[next_node] = initial_E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
             tx_energy += Etx[init_node][next_node]
             rx_energy += Erx[init_node][next_node]
             counter += 1
 
-
-    reward = tx_energy
+    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i != sink_node]
+    # print('Energy Consumption:', Energy_Consumption)
+    reward = max(Energy_Consumption)
     Min_value.append(reward)
 
+    '''
     for node in chosen_ST:
         counter = 0
         while counter < len(chosen_ST[node]) - 1:
@@ -142,15 +150,16 @@ for i in range(episodes):
             crx_energy += Crx[init_node][next_node]
             counter += 1
 
+    '''
 
     delay.append(initial_delay)
     E_consumed.append(tx_energy + rx_energy + ctx_energy + crx_energy)
     EE_consumed.append(sum(E_consumed))
 
     cost = True
-    for index, item in enumerate(E_vals):
-        if item <= 0.0001:
-            print('E_vals:', E_vals)
+    for index, item in enumerate(initial_E_vals):
+        if item <= node_energy_limit:
+            print('E_vals:', initial_E_vals)
             print('index:', index)
             cost = False
             print("Energy cannot be negative!")
@@ -159,11 +168,15 @@ for i in range(episodes):
     if not cost:
         break
 
+    for i in range(len(ref_E_vals)):
+        ref_E_vals[i] = initial_E_vals[i]
+
+print('Round:', Episode)
 print('Actions:', Action)
+print('Reward:', Min_value)
 print("--- %s seconds ---" % (time.time() - start_time))
 
-'''print('Reward:', Min_value)
-print('Round:', Episode)
+'''
 #print('Delay:', delay)
 print('Total Energy:', EE_consumed)
 print('Energy:', E_consumed)
@@ -171,22 +184,22 @@ print('Energy:', E_consumed)
 
 
 plt.plot(Episode, Min_value, label="Reward")
-plt.xlabel('Round')
-plt.ylabel('Q-Value')
+plt.xlabel('Rounds')
+plt.ylabel('Maximum Nodes Energy Consumption (Joules)')
 # plt.title('Q-Value Convergence')
 plt.legend()
 plt.show()
 
 
 plt.plot(Episode, Action)
-plt.xlabel('Round')
+plt.xlabel('Rounds')
 plt.ylabel('Discrete Action')
 # plt.title('Selected Action for each round')
 plt.show()
 
 plt.plot(Episode, E_consumed)
-plt.xlabel('Round')
-plt.ylabel('Energy Consumption (Joules)')
+plt.xlabel('Rounds')
+plt.ylabel('Total Energy Consumption (Joules)')
 # plt.title('Energy Consumption for each round')
 plt.show()
 

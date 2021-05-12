@@ -42,7 +42,7 @@ for u, v in list_unweighted_edges:
 
 # initialization of network parameters
 
-discount_factor = 0.0
+discount_factor = 0
 learning_rate = 0.7
 initial_energy = 2  # Joules
 data_packet_size = 256  # bits
@@ -108,7 +108,9 @@ for T in all_STs:
 #print('All paths:', ST_paths)
 #print('length all ST:', len(ST_paths))
 
-Q_matrix = np.zeros((len(all_STs), len(all_STs)))
+Q_matrix = np.ones((len(all_STs), len(all_STs)))
+Q_matrix *= initial_energy
+#print('Q_matrix:', Q_matrix)
 initial_state = random.choice(range(0, len(all_STs), 1))
 
 Q_value = []
@@ -186,14 +188,14 @@ for i in range(episodes):
 
     '''
     # Maximum possible Q value in next step (for new state)
-    #max_future_q = np.max(Q_matrix[action, :])
+    max_future_q = np.max(Q_matrix[action, :])
 
     # Current Q value (for current state and performed action)
     current_q = Q_matrix[current_state, action]
 
     # And here's our equation for a new Q value for current state and action
-    new_q = (1 - learning_rate) * current_q + learning_rate * reward
-    #new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
+    #new_q = (1 - learning_rate) * current_q + learning_rate * reward
+    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
     # new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
     Q_value.append(new_q)
 
@@ -232,7 +234,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 print('Total Energy:', EE_consumed)
 
 
-
+'''
 plt.plot(Episode, Action)
 plt.xlabel('Round')
 plt.ylabel('Discrete Action')
@@ -258,4 +260,4 @@ plt.xlabel('Rounds')
 plt.ylabel('Total Energy Consumption (Joules)')
 # plt.title('Total Energy Consumption for each round')
 plt.show()
-'''
+
