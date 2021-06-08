@@ -74,7 +74,7 @@ for n in G.nodes:
 for elem in node_neigh:
     #print("The coordinates of node {} is {} and the locations of its neighbors are:".format(elem, position_array[elem]))
     for index in node_neigh[elem]:
-        {index: position_array[index]}
+		{index: position_array[index]}
 
 
 #Computation of Q-values of nodes

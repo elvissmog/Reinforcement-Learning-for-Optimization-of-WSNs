@@ -138,7 +138,7 @@ for i in range(num_of_episodes):
 	#print("The start node in episode number {} is {} ".format(i+1, start))
 	cost = True
 	for item in E_vals:
-		if item <=0:
+		if item <= 0:
 			cost = False
 			print("Energy cannot be negative!")
 			print("The final round is", i)

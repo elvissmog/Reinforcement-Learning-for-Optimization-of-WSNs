@@ -49,8 +49,8 @@ for u, v in list_unweighted_edges:
 
 discount_factor = 0.0
 learning_rate = 0.7
-initial_energy = 500  # Joules
-data_packet_size = 320  # bits
+initial_energy = 2000  # Joules
+data_packet_size = 512  # bits
 control_packet_size = 48 #bits
 electronic_energy = 50e-9  # Joules/bit 5
 e_fs = 10e-12  # Joules/bit/(meter)**2
@@ -78,8 +78,8 @@ d_o = math.sqrt(e_fs/e_mp)/transmission_range
 for i in range(len(G)):
     for j in range(len(G)):
         if i != j:
-            d[i][j] = (math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
-                (position_array[i][1] - position_array[j][1]), 2)))/transmission_range
+            d[i][j] = math.ceil((math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
+                (position_array[i][1] - position_array[j][1]), 2)))/transmission_range)
 
             if d[i][j] <= d_o:
                 Etx[i][j] = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow((d[i][j]), 2)
