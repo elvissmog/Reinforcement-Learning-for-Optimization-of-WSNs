@@ -8,6 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 # Instantiating the G object
 
 G = nx.Graph()
+transmission_range = 4
 
 # Adding nodes to the graph and their corresponding coordinates
 
@@ -22,17 +23,14 @@ list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4),
 position_array = []
 for node in sorted(G):
     position_array.append(G.nodes[node]['pos'])
-
-# return the distance matrix for the graph
-
-Dict = np.array(position_array)
-# print('position array:', Dict)
 distances = squareform(pdist(np.array(position_array)))
-
-pos_dist = {}
-
+#print('dis_max:', distances)
 for u, v in list_unweighted_edges:
-    G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
+
+    distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
+        (position_array[u][1] - position_array[v][1]), 2))
+    nor_distance = math.ceil(distance/transmission_range)
+    G.add_edge(u, v, weight=nor_distance)
 
 
 # the set of neighbors of all nodes in the graph
@@ -41,14 +39,14 @@ for n in G.nodes:
     node_neigh[n] = list(G.neighbors(n))
 
 # initialization of network parameters
-learning_rate = 0.5
+learning_rate = 0.7
 initial_energy = 1  # Joules
-packet_size = 512  # bits
+data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
-amplifier_energy = 100e-12  # Joules/bit/square meter 100e-12
+e_fs = 10e-12  # Joules/bit/(meter)**2
+e_mp = 0.0013e-12 #Joules/bit/(meter)**4
 node_energy_limit = 0.001
-transmission_range = 30  # meters
-pathloss_exponent = 2  # constant
+
 R = [[[0 for i in range(len(G))] for j in range(len(G))] for n in range(len(G))]
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
@@ -61,15 +59,21 @@ E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.0
 
 sink_node = 5
-E_vals[sink_node] = 5
+E_vals[sink_node] = 50000
+
+d_o = math.sqrt(e_fs/e_mp)
 
 for i in range(len(G)):
     for j in range(len(G)):
         if i != j:
-            d[i][j] = math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
-                (position_array[i][1] - position_array[j][1]), 2))
-            Etx[i][j] = electronic_energy * packet_size + amplifier_energy * packet_size * math.pow((d[i][j]), 2)
-            Erx[i][j] = electronic_energy * packet_size
+            d[i][j] = math.ceil((math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
+                (position_array[i][1] - position_array[j][1]), 2)))/transmission_range)
+
+            if d[i][j] <= d_o:
+                Etx[i][j] = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow((d[i][j]), 2)
+            else:
+                Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
+            Erx[i][j] = electronic_energy * data_packet_size
 
 # initialize starting point
 
@@ -77,7 +81,6 @@ num_of_episodes = 200000
 round = []
 Av_mean_Q = []
 Av_E_consumed = []
-Av_EE_consumed = []
 Av_delay = []
 
 for i in range(num_of_episodes):
@@ -87,9 +90,9 @@ for i in range(num_of_episodes):
     for item in E_vals:
         if item <= node_energy_limit:
             cost = False
-            #print("Energy cannot be negative!")
+            print("Energy cannot be negative!")
             #print('E_vals:', E_vals)
-            #print("The final round is:", i)
+            print("The final round is:", i)
 
     if not cost:
         break
@@ -98,7 +101,8 @@ for i in range(num_of_episodes):
     E_consumed = []
     EE_consumed = []
     delay = []
-    for node in G.nodes:
+    path_f = []
+    for node in range(len(G.nodes)-1):
         if node != sink_node:
             start = node
             queue = [start]  # first visited node
@@ -132,7 +136,7 @@ for i in range(num_of_episodes):
                 Q_vals[node][start] = temp_qval[next_hop]  # update the qvalue of the start node
 
                 # sum_Q[i] = sum(Q_vals)/len(Q_vals)
-                #mean_Qvals = sum(Q_vals[node]) / (len(Q_vals[node]) * max(Q_vals[node]))
+                mean_Qvals = sum(Q_vals[node]) / (len(Q_vals[node]) * max(Q_vals[node]))
                 E_vals[start] = E_vals[start] - Etx[start][next_hop]  # update the start node energy
                 E_vals[next_hop] = E_vals[next_hop] - Erx[start][next_hop]  # update the next hop energy
                 tx_energy += Etx[start][next_hop]
@@ -147,14 +151,39 @@ for i in range(num_of_episodes):
                 if next_hop == sink_node:
                     break
 
-                #delay.append(initial_delay)
-                #E_consumed.append(tx_energy + rx_energy)
+                delay.append(initial_delay)
+                E_consumed.append(tx_energy + rx_energy)
                 #EE_consumed.append(sum(E_consumed))
-                #mean_Q.append(mean_Qvals)
-                #round.append(i)
+                mean_Q.append(mean_Qvals)
 
-print('Q_vals:', Q_vals)
-print('path_Qvals:', path_Q_values)
+        path_f.append(path)
+    #print('path:', path_f)
+    #Av_mean_Q.append(sum(mean_Q))
+    #Av_delay.append(sum(delay))
+    #Av_E_consumed.append(sum(E_consumed))
+    #round.append(i)
+
+'''
+plt.plot(round, Av_mean_Q)
+plt.xlabel('Round')
+plt.ylabel('Average Q-Value')
+plt.title('Q-Value Convergence ')
+plt.show()
+
+plt.plot(round, Av_delay)
+plt.xlabel('Round')
+plt.ylabel('Average delay (s)')
+plt.title('Delay for each round')
+plt.show()
+
+plt.plot(round, Av_E_consumed)
+plt.xlabel('Round')
+plt.ylabel('Average Energy Consumption (Joules)')
+plt.title('Energy Consumption')
+plt.show()
+
+'''
+
 # print("The path is", path)
 # print("The Energy of the nodes after episode {} is {} ".format(i,E_vals))
 # print("The Q_values of the nodes after episode {} is  {}".format(i,Q_vals))
@@ -179,24 +208,6 @@ print('Length Round:', len(round))
 print('Length Delay:', len(delay))
 print('Length Q_Val:', len(mean_Q))
 print('Length Energy:', len(EE_consumed))
-
-plt.plot(round, mean_Q)
-plt.xlabel('Round')
-plt.ylabel('Average Q-Value')
-plt.title('Q-Value Convergence ')
-plt.show()
-
-plt.plot(round, delay)
-plt.xlabel('Round')
-plt.ylabel('Delay (s)')
-plt.title('Delay for each round')
-plt.show()
-
-plt.plot(round, E_consumed)
-plt.xlabel('Round')
-plt.ylabel('Energy Consumption (Joules)')
-plt.title('Energy Consumption for each round')
-plt.show()
 
 plt.plot(round, EE_consumed)
 plt.xlabel('Round')
