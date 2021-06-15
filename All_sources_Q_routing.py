@@ -48,15 +48,19 @@ for n in G.nodes:
 learning_rate = 0.7
 initial_energy = 1000  # Joules
 data_packet_size = 512  # bits
+control_packet_size = 96 # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
+learning_period = 10  # seconds
 node_energy_limit = 10
 
 R = [[[0 for i in range(len(G))] for j in range(len(G))] for n in range(len(G))]
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
+CEtx = [[0 for i in range(len(G))] for j in range(len(G))]
+CErx = [[0 for i in range(len(G))] for j in range(len(G))]
 path_Q_values = [[[0 for i in range(len(G))] for j in range(len(G))] for n in range(len(G))]
 Q_vals = [[0 for i in range(len(G))] for j in range(len(G))]
 E_vals = [initial_energy for i in range(len(G))]
@@ -80,109 +84,131 @@ for i in range(len(G)):
             else:
                 Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
             Erx[i][j] = electronic_energy * data_packet_size
+            if d[i][j] <= d_o:
+                CEtx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 2)
+            else:
+                CEtx[i][j] = electronic_energy * control_packet_size + e_mp * control_packet_size * math.pow((d[i][j]), 4)
+            Erx[i][j] = electronic_energy * control_packet_size
+
 
 # initialize starting point
 
 num_of_episodes = 2000000
 round = []
-Av_mean_Q = []
-Av_E_consumed = []
-Av_delay = []
+TAv_mean_Q = []
+TAv_E_consumed = []
+TAv_delay = []
 
-for i in range(num_of_episodes):
+for epi in range(num_of_episodes):
 
-    # print("The start node in episode number {} is {} ".format(i+1, start))
+    Av_mean_Q = []
+    Av_E_consumed = []
+    Av_delay = []
+    for l in range(learning_period):
+
+        mean_Q = []
+        E_consumed = []
+        delay = []
+        path_f = []
+        for node in range(len(G.nodes)-1):
+            if node != sink_node:
+                start = node
+                queue = [start]  # first visited node
+                path = str(start)  # first node
+                temp_qval = {}
+                initial_delay = 0
+                tx_energy = 0
+                rx_energy = 0
+                ctx_energy = 0
+                crx_energy = 0
+
+                while True:
+
+                    for neigh in node_neigh[start]:
+                        temp_qval[neigh] = (1 - learning_rate) * path_Q_values[node][start][neigh] + learning_rate * (d[start][neigh] + Q_vals[node][neigh])
+
+                    copy_q_values = {key: value for key, value in temp_qval.items() if key not in queue}
+
+                    # next_hop = min(temp_qval.keys(), key=(lambda k: temp_qval[k]))  #determine the next hop based on the minimum qvalue but ignore the visited node qvalue
+
+                    if np.random.random() >= 1 - epsilon:
+                        # Get action from Q table
+                        next_hop = random.choice(list(copy_q_values.keys()))
+                    else:
+                        # Get random action
+                        next_hop = min(copy_q_values.keys(), key=(lambda k: copy_q_values[k]))
+
+                    initial_delay += d[start][next_hop]
+
+                    queue.append(next_hop)
+
+                    path_Q_values[node][start][next_hop] = temp_qval[next_hop]  # update the path qvalue of the next hop
+                    Q_vals[node][start] = temp_qval[next_hop]  # update the qvalue of the start node
+
+                    # sum_Q[i] = sum(Q_vals)/len(Q_vals)
+                    mean_Qvals = sum(Q_vals[node]) / (len(Q_vals[node]) * max(Q_vals[node]))
+                    E_vals[start] = E_vals[start] - Etx[start][next_hop]  # update the start node energy for data packet transmission
+                    E_vals[next_hop] = E_vals[next_hop] - Erx[start][next_hop]  # update the next hop energy for data packet reception
+                    E_vals[next_hop] = E_vals[next_hop] - CEtx[next_hop][start]  # update the next hop node energy for control packet transmission
+                    E_vals[start] = E_vals[start] - CErx[next_hop][start]  # update the next hop node energy for control packet reception
+                    tx_energy += Etx[start][next_hop]
+                    rx_energy += Erx[start][next_hop]
+                    ctx_energy += CEtx[next_hop][start]
+                    crx_energy += CErx[next_hop][start]
+
+
+                    path = path + "->" + str(next_hop)  # update the path after each visit
+
+                    # print("The visited nodes are", queue)
+
+                    start = next_hop
+
+                    if next_hop == sink_node:
+                        break
+
+                delay.append(initial_delay)
+                E_consumed.append(tx_energy + rx_energy + ctx_energy + crx_energy)
+                mean_Q.append(mean_Qvals)
+
+            path_f.append(path)
+        #print('path:', path_f)
+        Av_mean_Q.append(sum(mean_Q)/len(mean_Q))
+        Av_delay.append(sum(delay)/len(delay))
+        Av_E_consumed.append(sum(E_consumed))
+
+    round.append(epi)
+    TAv_mean_Q.append(sum(Av_mean_Q)/len(Av_mean_Q))
+    TAv_delay.append(sum(Av_delay)/len(Av_delay))
+    TAv_E_consumed.append(sum(Av_E_consumed))
+
+
+
     cost = True
     for item in E_vals:
         if item <= node_energy_limit:
             cost = False
             print("Energy cannot be negative!")
-            #print('E_vals:', E_vals)
-            print("The final round is:", i)
+            # print('E_vals:', E_vals)
+            print("The final round is:", epi)
+            print('Lifetime in secs:', epi*learning_period)
 
     if not cost:
         break
 
-    mean_Q = []
-    E_consumed = []
-    EE_consumed = []
-    delay = []
-    path_f = []
-    for node in range(len(G.nodes)-1):
-        if node != sink_node:
-            start = node
-            queue = [start]  # first visited node
-            path = str(start)  # first node
-            temp_qval = {}
-            initial_delay = 0
-            tx_energy = 0
-            rx_energy = 0
 
-            while True:
-
-                for neigh in node_neigh[start]:
-                    temp_qval[neigh] = (1 - learning_rate) * path_Q_values[node][start][neigh] + learning_rate * (d[start][neigh] + Q_vals[node][neigh])
-
-                copy_q_values = {key: value for key, value in temp_qval.items() if key not in queue}
-
-                # next_hop = min(temp_qval.keys(), key=(lambda k: temp_qval[k]))  #determine the next hop based on the minimum qvalue but ignore the visited node qvalue
-
-                if np.random.random() >= 1 - epsilon:
-                    # Get action from Q table
-                    next_hop = random.choice(list(copy_q_values.keys()))
-                else:
-                    # Get random action
-                    next_hop = min(copy_q_values.keys(), key=(lambda k: copy_q_values[k]))
-
-                initial_delay += d[start][next_hop]
-
-                queue.append(next_hop)
-
-                path_Q_values[node][start][next_hop] = temp_qval[next_hop]  # update the path qvalue of the next hop
-                Q_vals[node][start] = temp_qval[next_hop]  # update the qvalue of the start node
-
-                # sum_Q[i] = sum(Q_vals)/len(Q_vals)
-                mean_Qvals = sum(Q_vals[node]) / (len(Q_vals[node]) * max(Q_vals[node]))
-                E_vals[start] = E_vals[start] - Etx[start][next_hop]  # update the start node energy
-                E_vals[next_hop] = E_vals[next_hop] - Erx[start][next_hop]  # update the next hop energy
-                tx_energy += Etx[start][next_hop]
-                rx_energy += Erx[start][next_hop]
-
-                path = path + "->" + str(next_hop)  # update the path after each visit
-
-                # print("The visited nodes are", queue)
-
-                start = next_hop
-
-                if next_hop == sink_node:
-                    break
-
-                delay.append(initial_delay)
-                E_consumed.append(tx_energy + rx_energy)
-                #EE_consumed.append(sum(E_consumed))
-                mean_Q.append(mean_Qvals)
-
-        path_f.append(path)
-    #print('path:', path_f)
-    Av_mean_Q.append(sum(mean_Q))
-    Av_delay.append(sum(delay))
-    Av_E_consumed.append(sum(E_consumed))
-    round.append(i)
-
-
-plt.plot(round, Av_mean_Q)
+plt.plot(round, TAv_mean_Q)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
 
-plt.plot(round, Av_delay)
+plt.plot(round, TAv_delay)
 plt.xlabel('Round')
 plt.ylabel('Average delay (s)')
 plt.title('Delay for each round')
 plt.show()
 
-plt.plot(round, Av_E_consumed)
+plt.plot(round, TAv_E_consumed)
 plt.xlabel('Round')
 plt.ylabel('Average Energy Consumption (Joules)')
 plt.title('Energy Consumption')
