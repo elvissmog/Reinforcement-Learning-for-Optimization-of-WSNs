@@ -36,10 +36,9 @@ position_array = []
 for node in sorted(G):
     position_array.append(G.nodes[node]['pos'])
 distances = squareform(pdist(np.array(position_array)))
-#print('dis_max:', distances)
+
 for u, v in list_unweighted_edges:
-    #G.add_edge(u, v, weight = 1)
-    #G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
+
     distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
         (position_array[u][1] - position_array[v][1]), 2))
     nor_distance = math.ceil(distance/transmission_range)
@@ -49,24 +48,21 @@ for u, v in list_unweighted_edges:
 
 discount_factor = 0
 learning_rate = 0.7
-initial_energy = 20  # Joules
+initial_energy = 900  # Joules
 data_packet_size = 512  # bits
-control_packet_size = 96 # bits
 electronic_energy = 50e-9  # Joules/bit 5
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
-node_energy_limit = 10  # Joules
-learning_period = 10  # seconds
+node_energy_limit = 10
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
-CEtx = [[0 for i in range(len(G))] for j in range(len(G))]
-CErx = [[0 for i in range(len(G))] for j in range(len(G))]
 initial_E_vals = [initial_energy for i in range(len(G))]
 ref_E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.1
 episodes = 5000000
+
 
 sink_energy = 500000
 sink_node = 100
@@ -88,22 +84,13 @@ for i in range(len(G)):
             else:
                 Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
             Erx[i][j] = electronic_energy * data_packet_size
-            if d[i][j] <= d_o:
-                CEtx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 2)
-            else:
-                CEtx[i][j] = electronic_energy * control_packet_size + e_mp * control_packet_size * math.pow((d[i][j]), 4)
-            Erx[i][j] = electronic_energy * control_packet_size
 
 
 d_max = []
 for ix in d:
     d_max.append(max(ix))
 
-#print('d_max:', d_max)
-#print('d_max_max:', max(d_max))
-#print('dist_thre:', d_o)
-#print('distance:', d)
-#print('Energy:', Etx)
+start_time = time.time()
 
 Y = Yamada(graph=G, n_trees = np.inf)
 all_STs = Y.spanning_trees()
@@ -134,11 +121,20 @@ Q_value = []
 Action = []
 Min_value = []
 Episode = []
+delay = []
 E_consumed = []
+EE_consumed = []
+Min_nodes_RE = []
 
-start_time = time.time()
 
-for epi in range(episodes):
+
+for i in range(episodes):
+
+    initial_delay = 0
+    tx_energy = 0
+    rx_energy = 0
+
+
     available_actions = [*range(0, len(ST_paths), 1)]
 
     current_state = initial_state
@@ -150,52 +146,37 @@ for epi in range(episodes):
         # Get action from Q table
         action = np.argmin(Q_matrix[current_state, :])
 
+
     initial_state = action
 
     chosen_ST = ST_paths[action]
     Action.append(action + 1)
 
-    ETX = []
-    ERX = []
-    for l in range(learning_period):
+    path_f = []
 
-        tx_energy = 0
-        rx_energy = 0
-
-        for node in chosen_ST:
-            counter = 0
-            while counter < len(chosen_ST[node]) - 1:
-                init_node = chosen_ST[node][counter]
-                next_node = chosen_ST[node][counter + 1]
-                initial_E_vals[init_node] = initial_E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
-                initial_E_vals[next_node] = initial_E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
-                tx_energy += Etx[init_node][next_node]
-                rx_energy += Erx[init_node][next_node]
-                counter += 1
-            ETX.append(tx_energy)
-            ERX.append(rx_energy)
-
-
-    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i != sink_node]
-    reward = max(Energy_Consumption)
-    Min_value.append(reward)
-
-    ctx_energy = 0
-    crx_energy = 0
-    CETX = []
-    CERX = []
     for node in chosen_ST:
+        path = str(node)
         counter = 0
         while counter < len(chosen_ST[node]) - 1:
             init_node = chosen_ST[node][counter]
             next_node = chosen_ST[node][counter + 1]
-            initial_E_vals[init_node] = initial_E_vals[init_node] - CEtx[init_node][next_node]  # update the start node energy
-            initial_E_vals[next_node] = initial_E_vals[next_node] - CErx[init_node][next_node]  # update the next hop energy
-            ctx_energy += CEtx[init_node][next_node]
-            crx_energy += CErx[init_node][next_node]
+            initial_E_vals[init_node] = initial_E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
+            initial_E_vals[next_node] = initial_E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
+            tx_energy += Etx[init_node][next_node]
+            rx_energy += Erx[init_node][next_node]
+            path = path + "->" + str(next_node)
             counter += 1
-        CETX.append(ctx_energy)
-        CERX.append(crx_energy)
+        path_f.append(path)
+    #print('ref Evals:', ref_E_vals)
+    #print('initial Energy:', initial_E_vals)
+    #current_E_vals = initial_E_vals
+    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i != sink_node]
+    #print('Energy Consumption:', Energy_Consumption)
+    reward = min(Energy_Consumption)
+
+    #reward = (tx_energy + rx_energy)
+    #reward = min(E_vals)
+    Min_value.append(reward)
 
     # Maximum possible Q value in next step (for new state)
     max_future_q = np.max(Q_matrix[action, :])
@@ -204,16 +185,20 @@ for epi in range(episodes):
     current_q = Q_matrix[current_state, action]
 
     # And here's our equation for a new Q value for current state and action
+    #new_q = (1 - learning_rate) * current_q + learning_rate * reward
     new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
-
+    # new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
     Q_value.append(new_q)
 
     # Update Q table with new Q value
     Q_matrix[current_state, action] = new_q
 
-    E_consumed.append(sum(ETX) + sum(ERX) + sum(CETX) + sum(CERX))
-    Episode.append(epi)
 
+    delay.append(initial_delay)
+    E_consumed.append(tx_energy + rx_energy)
+    Episode.append(i)
+
+    #print('path:', path_f)
     cost = True
     for index, item in enumerate(initial_E_vals):
         if item <= node_energy_limit:
@@ -221,23 +206,32 @@ for epi in range(episodes):
             print('Index:', index)
             cost = False
             print("Energy cannot be negative!")
-            print("The final round is", epi)
-            print('Lifetime in secs:', epi*learning_period)
+            print("The final round is", i)
             print('Total Energy Consumed:', total_initial_energy - sum(initial_E_vals))
+            print('Energy Consummed:', sum(E_consumed))
 
     if not cost:
         break
     #ref_E_vals = initial_E_vals
+    Min_nodes_RE.append(min(initial_E_vals))
     for i in range(len(ref_E_vals)):
         ref_E_vals[i] = initial_E_vals[i]
 
 
+#print('Round:', Episode)
+#print('Actions:', Action)
+#print('Reward:', Min_value)
+#print('Energy:', E_consumed)
 print("--- %s seconds ---" % (time.time() - start_time))
+print('Average nodes ME:', sum(Min_nodes_RE)/len(Min_nodes_RE))
 my_data = Counter(Action)
 print('RT_UT:', my_data.most_common())  # Returns all unique items and their counts
-
 '''
-plt.plot(Episode, Q_value)
+#print('Delay:', delay)
+print('Total Energy:', EE_consumed)
+
+
+plt.plot(Episode, Action)
 plt.xlabel('Round')
 plt.ylabel('Discrete Action')
 # plt.title('Selected Action for each round')
@@ -248,5 +242,10 @@ plt.xlabel('Rounds')
 plt.ylabel('Total Nodes Energy Consumption (Joules)')
 # plt.title('Energy Consumption for each round')
 plt.show()
-'''
 
+plt.plot(Episode, EE_consumed)
+plt.xlabel('Rounds')
+plt.ylabel('Total Energy Consumption (Joules)')
+# plt.title('Total Energy Consumption for each round')
+plt.show()
+'''

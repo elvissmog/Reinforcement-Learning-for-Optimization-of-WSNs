@@ -155,7 +155,7 @@ for i in range(num_of_episodes):
 			R[start][neigh] = E_vals[neigh] / (((Etx[start][neigh] / (max_Etx)))*hop_counts[neigh])
 			
 			#print("The reward function between node {} and its neighbor node {} is {} ".format(start, neigh, R[start][neigh]))
-			temp_qval[neigh] = (1 - learning_rate) * path_Q_values[start][neigh] + learning_rate * (R[start][neigh])
+			temp_qval[neigh] = (1 - learning_rate) * path_Q_values[start][neigh] + learning_rate * (R[start][neigh] + q_values[neigh])
 
 		copy_q_values = {key: value for key, value in temp_qval.items() if key not in queue}
 		# next_hop = min(temp_qval.keys(), key=(lambda k: temp_qval[k]))  #determine the next hop based on the minimum qvalue but ignore the visited node qvalue
@@ -207,17 +207,7 @@ for i in range(num_of_episodes):
 	mean_Q.append(mean_Qvals)
 	round.append(i)
 
-	'''print("The path is", path)
-	print("The Energy of the nodes after episode {} is {} ".format(i, E_vals))
-	print("The Q_values of the nodes after episode {} is  {}".format(i, q_values))
-	print("The sum of the Q_values after episode {} is {}".format(i,sum_Q[i]))'''
-
-
-'''x_round = [i for i in range(1, num_of_episodes + 1)]
-plt.plot(x_round, sum_Q)
-
-plt.show()'''
-
+'''
 print('Round:', round)
 print('Delay:', delay)
 print('Total Energy:', EE_consumed)
@@ -227,6 +217,7 @@ print('Length Round:', len(round))
 print('Length Delay:', len(delay))
 print('Length Q_Val:', len(mean_Q))
 print('Length Energy:', len(EE_consumed))
+'''
 
 plt.plot(round, mean_Q)
 plt.xlabel('Round')

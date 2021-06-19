@@ -145,7 +145,7 @@ plt.ylabel('Average Minimum RE')
 #plt.title('Cummulative Energy Consumption per Round')
 plt.legend()
 plt.show()
-'''
+
 #R = [30,40,50,60,70,80]
 #R_m =[257329,251424,272368,298744,275980,247999]
 #R_s = [249998,246062,249999,238549,249999,242247]
@@ -172,4 +172,35 @@ plt.xlabel('Initial Node Residual Energy (J)')
 plt.ylabel('Network Lifetime')
 #plt.title('Cummulative Energy Consumption per Round')
 plt.legend()
+plt.show()
+'''
+
+E = [100,200,300,400,500,600,700,800,900,1000]
+CQR_LT = [33286,71219,111577,146770,184364,222198,259901,297681,335451,373272]
+CQR_EC = [1218,2612,4113,5390,6770,8160,9546,10935,12323,13713]
+RLBR_LT = [17844,37671,57497,77324,97151,116977,136804,156631,176457,196284]
+RLBR_EC = [367,775,1183,1591,2000,2408,2816,3224,3632,4040]
+RL2TO_LT = [30044,63428,100238,134803,169368,203933,238499,273064,307629,342194]
+RL2TO_EC = [541,1143,1812,2436,3061,3686,4311,4924,5561,6185]
+
+
+
+plt.plot(E, CQR_LT, 'g-o', label = "CQRP")
+plt.plot(E, RLBR_LT, 'r-s', label = "RLBR")
+plt.plot(E, RL2TO_LT, 'b-*', label = "RL2TO")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Lifetime (s)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+#plt.grid()
+plt.show()
+
+plt.plot(E, CQR_EC, 'g-o', label = "CQRP")
+plt.plot(E, RLBR_EC, 'r-s', label = "RLBR")
+plt.plot(E, RL2TO_EC, 'b-*', label = "RL2TO")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Energy Consumption (J)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+#plt.grid()
 plt.show()
