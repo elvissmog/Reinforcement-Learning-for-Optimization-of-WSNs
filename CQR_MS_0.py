@@ -48,12 +48,13 @@ for u, v in list_unweighted_edges:
 
 discount_factor = 0
 learning_rate = 0.7
-initial_energy = 900  # Joules
+initial_energy = 200  # Joules
 data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
 node_energy_limit = 10
+num_pac = 5
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
@@ -160,10 +161,10 @@ for i in range(episodes):
         while counter < len(chosen_ST[node]) - 1:
             init_node = chosen_ST[node][counter]
             next_node = chosen_ST[node][counter + 1]
-            initial_E_vals[init_node] = initial_E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
-            initial_E_vals[next_node] = initial_E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
-            tx_energy += Etx[init_node][next_node]
-            rx_energy += Erx[init_node][next_node]
+            initial_E_vals[init_node] = initial_E_vals[init_node] - num_pac * Etx[init_node][next_node]  # update the start node energy
+            initial_E_vals[next_node] = initial_E_vals[next_node] - num_pac * Erx[init_node][next_node]  # update the next hop energy
+            tx_energy += num_pac * Etx[init_node][next_node]
+            rx_energy += num_pac * Erx[init_node][next_node]
             path = path + "->" + str(next_node)
             counter += 1
         path_f.append(path)
@@ -172,7 +173,7 @@ for i in range(episodes):
     #current_E_vals = initial_E_vals
     Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i != sink_node]
     #print('Energy Consumption:', Energy_Consumption)
-    reward = min(Energy_Consumption)
+    reward = sum(Energy_Consumption)
 
     #reward = (tx_energy + rx_energy)
     #reward = min(E_vals)
@@ -207,8 +208,8 @@ for i in range(episodes):
             cost = False
             print("Energy cannot be negative!")
             print("The final round is", i)
-            print('Total Energy Consumed:', total_initial_energy - sum(initial_E_vals))
-            print('Energy Consummed:', sum(E_consumed))
+            print('Total Energy Consumed:', (total_initial_energy - sum(initial_E_vals))/i)
+            print('Energy Consummed:', (sum(E_consumed)))
 
     if not cost:
         break
