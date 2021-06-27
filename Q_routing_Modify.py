@@ -53,18 +53,18 @@ list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4),
 
 # initialization of network parameters
 learning_rate = 0.5
-initial_energy = 0.005  # Joules
+initial_energy = 5  # Joules
 data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
-amplifier_energy = 100e-12  # Joules/bit/square meter 100e-12
+amplifier_energy = 10e-12  # Joules/bit/square meter 100e-12
 transmission_range = 30  # meters
-pathloss_exponent = 2  # constant
+node_energy_limit = 2
 epsilon = 0.0
 
 
 # initialize starting point
 
-num_of_episodes = 1000
+num_of_episodes = 10000000
 mean_Q = []
 E_consumed = []
 delay = []
@@ -72,7 +72,7 @@ round = []
 
 graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, list_unweighted_edges)
 
-for i in range(num_of_episodes):
+for rdn in range(num_of_episodes):
 
     start = 0
     queue = [start]  # first visited node
@@ -100,8 +100,6 @@ for i in range(num_of_episodes):
             next_hop = min(copy_q_values.keys(), key=(lambda k: copy_q_values[k]))
 
 
-
-
         queue.append(next_hop)
 
         path_q_values[start][next_hop] = temp_qval[next_hop]    # update the path qvalue of the next hop
@@ -119,7 +117,7 @@ for i in range(num_of_episodes):
 
 
         path = path + "->" + str(next_hop)  # update the path after each visit
-        print('path:', path)
+        #print('path:', path)
         # print("The visited nodes are", queue)
 
         start = next_hop
@@ -127,13 +125,53 @@ for i in range(num_of_episodes):
         if next_hop == end:
             break
 
-    print('Deleted_neigh:', deleted_neigh)
-    print('updated_node_neigh:', node_neigh)
+
     delay.append(initial_delay)
     E_consumed.append(tx_energy + rx_energy)
-    EE_consumed.append(sum(E_consumed))
     mean_Q.append(mean_Qvals)
-    round.append(i)
+    round.append(rdn)
+
+    cost = 0
+    dead_node = None
+    update_edges = []
+    for index, item in e_values.items():
+
+        if item <= node_energy_limit:
+            print('Index:', index)
+            print('Evals:', e_values)
+            cost = cost + 1
+            print("Energy cannot be negative!")
+            print("The final round is", rdn)
+
+            xy.pop(index)
+
+            dead_node = index
+
+    for ind in list_unweighted_edges:
+        if ind[0] != dead_node and ind[1] != dead_node:
+            update_edges.append(ind)
+
+    update_evals = {index: item for index, item in e_values.items() if item > node_energy_limit}
+
+    # print('Original edges:', list_unweighted_edges)
+    if cost == 1:
+        #print('cost:', cost)
+
+        try:
+            graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, update_edges)
+
+            e_values = update_evals
+
+
+        except ValueError:
+            break
+
+
+        cost = 0
+    # graph, distances = ngraph, ndistances
+
+    list_unweighted_edges = update_edges
+
 
 
 
