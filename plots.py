@@ -173,21 +173,136 @@ plt.ylabel('Network Lifetime')
 #plt.title('Cummulative Energy Consumption per Round')
 plt.legend()
 plt.show()
-'''
+
 
 E = [100,200,300,400,500,600,700,800,900,1000]
-CQR_LT = [33286,71219,111577,146770,184364,222198,259901,297681,335451,373272]
-CQR_EC = [1218,2612,4113,5390,6770,8160,9546,10935,12323,13713]
+CQR_LT1 = [33286,71219,111577,146770,184364,222198,259901,297681,335451,373272]
+#CQR_LT2 = [33429,68395,102373,137637,170453,203121,236086,268837,301546,334254]
+CQR_EC1 = [1218,2612,4113,5390,6770,8160,9546,10935,12323,13713]
+CQR_EC2 = [1223,2505,3750,5041,6231,7412,8611,9765,10976,12128]
 RLBR_LT = [17844,37671,57497,77324,97151,116977,136804,156631,176457,196284]
 RLBR_EC = [367,775,1183,1591,2000,2408,2816,3224,3632,4040]
 RL2TO_LT = [30044,63428,100238,134803,169368,203933,238499,273064,307629,342194]
-RL2TO_EC = [541,1143,1812,2436,3061,3686,4311,4924,5561,6185]
+RL2TO_EC = [541,1143,1812,2436,3061,3686,4311,4936,5561,6185]
 
+#cr1 = ((sum(CQR_LT1) - sum(RL2TO_LT))/sum(RL2TO_LT))*100
+#cr2 = ((sum(CQR_LT1) - sum(RLBR_LT))/sum(RLBR_LT))*100
 
+#print('a', cr1)
+#print('b', cr2)
+cr1 = ((sum(CQR_EC1) - sum(RL2TO_EC))/sum(CQR_EC1))*100
+cr2 = ((sum(CQR_EC1) - sum(RLBR_EC))/sum(CQR_EC1))*100
+print('a', cr1)
+print('b', cr2)
 
-plt.plot(E, CQR_LT, 'g-o', label = "CQRP")
+plt.plot(E, CQR_LT1, 'g-o', label = "CQRP1")
+plt.plot(E, CQR_LT2, 'g-*', label = "CQRP2")
 plt.plot(E, RLBR_LT, 'r-s', label = "RLBR")
-plt.plot(E, RL2TO_LT, 'b-*', label = "RL2TO")
+plt.plot(E, RL2TO_LT, 'b-*', label = "R2LTO")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Lifetime (s)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+#plt.grid()
+#plt.show()
+
+plt.plot(E, CQR_EC1, 'g-o', label = "CQRP1")
+plt.plot(E, CQR_EC2, 'g-*', label = "CQRP2")
+plt.plot(E, RLBR_EC, 'r-s', label = "RLBR")
+plt.plot(E, RL2TO_EC, 'b-*', label = "R2LTO")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Energy Consumption (J)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+#plt.grid()
+#plt.show()
+'''
+
+'''
+N = [1,2,3,4,5,6,7,8,9,10]
+#cqr_lt1 =[33225,16023,10499,7785,6202,5126,4388,3837,3416,3056]
+#cqr_lt2 = [33492,15993,10487,7809,6168,5142,4392,3853,3432,3071]
+cqr_lt = [373272,188599,122786,91041,74505,61902,52871,46139,41109,37104]
+#cqr_ec1 = [1215,1169,1148,1135,1129,1119,1118,1116,1118,1111]
+#cqr_ec2 = [1220,1168,1147,1138,1123,1123,1118,1121,1124,1117]
+cqr_ec = [13713,13714,13713,13712,13711,13711,13711,13710,13711,13712]
+#rlbr_lt = [17844,8922,5948,4461,3569,2974,2549,2230,1983,1784]
+rlbr_lt = [196284,98142,65428,49071,39256,32714,27802,24504,21809,19628]
+#rlbr_ec = [367,367,367,367,367,367,367,367,367,368]
+rlbr_ec = [4040,4041,4040,4041,4040,4041,4042,4042,4041,4041]
+#rl2to_lt = [30044,15022,10014,7511,6008,5007,4292,3755,3338,3004]
+rl2to_lt = [342194,171097,114064,85122,68166,57032,48884,42774,38021,34219]
+#rl2to_ec = [541,541,541,541,541,541,541,541,541,541]
+rl2to_ec = [6185,6185,6185,6184,6186,6187,6186,6187,6186,6187]
+
+#cr1 = ((sum(cqr_lt) - sum(rl2to_lt))/sum(rl2to_lt))*100
+#cr2 = ((sum(cqr_lt) - sum(rlbr_lt))/sum(rlbr_lt))*100
+
+#print('a', cr1)
+#print('b', cr2)
+
+cr1 = ((sum(cqr_ec) - sum(rl2to_ec))/sum(cqr_ec))*100
+cr2 = ((sum(cqr_ec) - sum(rlbr_ec))/sum(cqr_ec))*100
+
+print('a', cr1)
+print('b', cr2)
+
+
+plt.plot(N, cqr_lt, 'g-o', label = "LACQRP")
+#plt.plot(N, cqr_lt2, 'g-*', label = "CQRP2")
+plt.plot(N, rlbr_lt, 'r-s', label = "RLBR")
+plt.plot(N, rl2to_lt, 'b-*', label = "R2LTO")
+plt.xlabel('Packet Generation Rate (/s)')
+plt.ylabel('Network Lifetime (s)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+#plt.grid()
+plt.show()
+
+plt.plot(N, cqr_ec, 'g-o', label = "CQRP")
+#plt.plot(N, cqr_ec2, 'g-*', label = "CQRP2")
+plt.plot(N, rlbr_ec, 'r-s', label = "RLBR")
+plt.plot(N, rl2to_ec, 'b-*', label = "R2LTO")
+plt.xlabel('Packet Generation Rate (/s)')
+plt.ylabel('Network Energy Consumption (J)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+#plt.grid()
+plt.show()
+
+#cr1 = ((sum(cqr_lt1) - sum(rl2to_lt))/sum(rl2to_lt))*100
+#cr2 = ((sum(cqr_lt1) - sum(rlbr_lt))/sum(rlbr_lt))*100
+
+#print('a', cr1)
+#print('b', cr2)
+'''
+
+E = [100,200,300,400,500,600,700,800,900,1000]
+#CQR_LT1 = [33286,71219,111577,146770,184364,222198,259901,297681,335451,373272]
+#CQR_LT2 = [33429,68395,102373,137637,170453,203121,236086,268837,301546,334254]
+CQR_LT1 = [33451,71219,111577,146770,184364,222198,259901,297681,335451,373272]
+CQR_EC1 = [1218,2612,4113,5390,6770,8160,9546,10935,12323,13713]
+CQR_EC2 = [1223,2505,3750,5041,6231,7412,8611,9765,10976,12128]
+RLBR_LT = [17844,37671,57497,77324,97151,116977,136804,156631,176457,196284]
+RLBR_EC = [367,775,1183,1591,2000,2408,2816,3224,3632,4040]
+RL2TO_LT = [30044,63428,100238,134803,169368,203933,238499,273064,307629,342194]
+RL2TO_EC = [541,1143,1812,2436,3061,3686,4311,4936,5561,6185]
+
+UT = [0.720456788,0.632820158,0.865784676,13.18685219,25.05870263,34.0267796,41.08208753,46.77928217,51.24977098,54.66643812]
+#cr1 = ((sum(CQR_LT1) - sum(RL2TO_LT))/sum(RL2TO_LT))*100
+#cr2 = ((sum(CQR_LT1) - sum(RLBR_LT))/sum(RLBR_LT))*100
+
+#print('a', cr1)
+#print('b', cr2)
+cr1 = ((sum(CQR_EC1) - sum(RL2TO_EC))/sum(CQR_EC1))*100
+cr2 = ((sum(CQR_EC1) - sum(RLBR_EC))/sum(CQR_EC1))*100
+print('a', cr1)
+print('b', cr2)
+
+plt.plot(E, CQR_LT1, 'g-o', label = "LACQRP")
+#plt.plot(E, CQR_LT2, 'g-*', label = "CQRP2")
+plt.plot(E, RLBR_LT, 'r-s', label = "RLBR")
+plt.plot(E, RL2TO_LT, 'b-*', label = "R2LTO")
 plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Network Lifetime (s)')
 #plt.title('Cummulative Energy Consumption per Round')
@@ -195,12 +310,7 @@ plt.legend()
 #plt.grid()
 plt.show()
 
-plt.plot(E, CQR_EC, 'g-o', label = "CQRP")
-plt.plot(E, RLBR_EC, 'r-s', label = "RLBR")
-plt.plot(E, RL2TO_EC, 'b-*', label = "RL2TO")
+plt.plot(E, UT, 'g-o', label = "LACQRP")
 plt.xlabel('Initial Node Energy (J)')
-plt.ylabel('Network Energy Consumption (J)')
-#plt.title('Cummulative Energy Consumption per Round')
-plt.legend()
-#plt.grid()
+plt.ylabel('Optimal RT Utilization (%)')
 plt.show()
