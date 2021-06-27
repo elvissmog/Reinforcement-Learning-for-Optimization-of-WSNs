@@ -55,12 +55,13 @@ for n in G.nodes:
 
 # initialization of network parameters
 learning_rate = 0.7
-initial_energy = 900  # Joules
+initial_energy = 100  # Joules
 data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
 node_energy_limit = 10
+num_pac = 10
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
@@ -138,13 +139,13 @@ for i in range(num_of_episodes):
             while True:
 
                 for neigh in node_neigh[start]:
-                    max_d = 1  # max(d[start][:])
-                    if d[start][sink_node] > d[neigh][sink_node]:
+
+                    if d[start][sink_node] >= d[neigh][sink_node] and hop_counts[start] >= hop_counts[neigh]:
                         if d[start][neigh] <= d_o:
-                            R[node][start][neigh] = E_vals[neigh] / ((((d[start][neigh]) / max_d) ** 2) * hop_counts[neigh])
+                            R[node][start][neigh] = E_vals[neigh] / ((((d[start][neigh]) / d_o) ** 2) * hop_counts[neigh])
 
                         else:
-                            R[node][start][neigh] = E_vals[neigh] / ((((d[start][neigh]) / max_d) ** 4) * hop_counts[neigh])
+                            R[node][start][neigh] = E_vals[neigh] / ((((d[start][neigh]) / d_o) ** 4) * hop_counts[neigh])
 
 
                     temp_qval[neigh] = (1 - learning_rate) * path_Q_values[node][start][neigh] + learning_rate * (R[node][start][neigh] + Q_vals[node][neigh])
@@ -169,10 +170,10 @@ for i in range(num_of_episodes):
 
 
                 mean_Qvals = sum([Q_vals[node][k] for k in Q_vals[node]]) / (len(Q_vals[node]) * max([Q_vals[node][k] for k in Q_vals[node]]))
-                E_vals[start] = E_vals[start] - Etx[start][next_hop]  # update the start node energy
-                E_vals[next_hop] = E_vals[next_hop] - Erx[start][next_hop]  # update the next hop energy
-                tx_energy += Etx[start][next_hop]
-                rx_energy += Erx[start][next_hop]
+                E_vals[start] = E_vals[start] - num_pac * Etx[start][next_hop]  # update the start node energy
+                E_vals[next_hop] = E_vals[next_hop] - num_pac * Erx[start][next_hop]  # update the next hop energy
+                tx_energy += num_pac * Etx[start][next_hop]
+                rx_energy += num_pac * Erx[start][next_hop]
 
                 path = path + "->" + str(next_hop)  # update the path after each visit
 
@@ -202,6 +203,7 @@ for i in range(num_of_episodes):
             print("The final round is", i)
             print('Index:', index)
             print('Total Energy Consumed:', total_initial_energy - sum(E_vals))
+            print('Energy Consumped:', sum(Av_E_consumed))
 
     if not cost:
         break
