@@ -155,7 +155,6 @@ for rdn in range(num_of_episodes):
 
     # print('Original edges:', list_unweighted_edges)
     if cost == 1:
-        #print('cost:', cost)
 
         try:
             graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, update_edges)
@@ -168,7 +167,6 @@ for rdn in range(num_of_episodes):
 
 
         cost = 0
-    # graph, distances = ngraph, ndistances
 
     list_unweighted_edges = update_edges
 
