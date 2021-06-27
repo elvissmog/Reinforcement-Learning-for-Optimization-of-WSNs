@@ -3,128 +3,91 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-from scipy.spatial.distance import pdist, squareform
 
-# Instantiating the Graph object
 
-G = nx.Graph()
+sink_node = 5
+def build_graph(positions, links):
+    G = nx.Graph()
+    for i in positions:
+        G.add_node(i, pos=positions[i])
 
-# Adding nodes to the graph and their corresponding coordinates
+    # Extracting the (x,y) coordinate of each node to enable the calculation of the Euclidean distances of the Graph edges
+    global position_array
+    position_array = {}
+    for nd in G:
+        position_array[nd] = G.nodes[nd]['pos']
 
-x_y_cordinates = [(1, 3), (2.5, 5), (2.5, 1), (4.5, 5), (4.5, 1), (6, 3)]
-for i in range(len(x_y_cordinates)):
-	G.add_node(i, pos=x_y_cordinates[i])
+    #Adding unweighted edges to the graph and calculating the distances
+    for u, v in links:
+        G.add_edge(u, v, weight = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow((position_array[u][1] - position_array[v][1]), 2)))
 
-# Adding unweighted edges to the Graph
+    # The dictionary of neighbors of all nodes in the graph
+    node_neigh = {}
+    for n in G.nodes:
+        node_neigh[n] = list(G.neighbors(n))
+
+    q_vals = {}
+    for ix in G.nodes:
+        q_vals[ix] = 0
+
+    path_q_vals = {}
+    for xi in G.nodes:
+        path_q_vals[xi] = q_vals
+
+    # Energy consumption
+    e_vals = {}
+
+    for idx in G.nodes:
+        if idx != sink_node:
+            e_vals[idx] = initial_energy
+        else:
+            e_vals[idx] = 50
+
+    return G, node_neigh, q_vals, e_vals, path_q_vals
+
+
+xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
+
 list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
 
-# Extracting the (x,y) coordinate of each node to enable the calculation of the Euclidean distances of the Graph edges
-position_array = []
-for node in sorted(G):
-    position_array.append(G.nodes[node]['pos'])
 
-# Calculating the distance matrix for the graph
-
-distances = squareform(pdist(np.array(position_array)))
-
-for u, v in list_unweighted_edges:
-    G.add_edge(u, v, weight=np.round(distances[u][v], decimals=1))
-
-node_pos = nx.get_node_attributes(G, 'pos')
-edge_weight = nx.get_edge_attributes(G, 'weight')
-
-node_col = ['yellow']
-edge_col = ['black']
-
-# The dictionary of neighbors of all nodes in the graph
-node_neigh = {}
-for n in G.nodes:
-    node_neigh[n] = list(G.neighbors(n))
-
-print('node_neigh_keys:', list(node_neigh.keys()))
-#node_neigh.pop(3)
-#print('Updated node_neigh:', node_neigh)
 # initialization of network parameters
 learning_rate = 0.5
 initial_energy = 0.005  # Joules
-packet_size = 512  # bits
+data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 amplifier_energy = 100e-12  # Joules/bit/square meter 100e-12
 transmission_range = 30  # meters
 pathloss_exponent = 2  # constant
-R = [[0 for i in range(len(G))] for j in range(len(G))]
-Etx = [[0 for i in range(len(G))] for j in range(len(G))]
-Erx = [[0 for i in range(len(G))] for j in range(len(G))]
-path_Q_values = [[0 for i in range(len(G))] for j in range(len(G))]
-Q_vals = [0 for i in range(len(G))]
-E_vals = [initial_energy for i in range(len(G))]
-
 epsilon = 0.0
 
-for i in range(len(G)):
-    for j in range(len(G)):
-        if i != j:
-            R[i][j] = math.sqrt(math.pow((position_array[i][0] - position_array[j][0]), 2) + math.pow(
-                (position_array[i][1] - position_array[j][1]), 2))
-            Etx[i][j] = electronic_energy * packet_size + amplifier_energy * packet_size * math.pow((R[i][j]), 2)
-            Erx[i][j] = electronic_energy * packet_size
 
 # initialize starting point
 
 num_of_episodes = 1000
-start = 0
-queue = [start]
 mean_Q = []
 E_consumed = []
-EE_consumed = []
 delay = []
 round = []
-deleted_neigh = []
+
+graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, list_unweighted_edges)
+
 for i in range(num_of_episodes):
 
     start = 0
-    # start = random.choice(range(0,len(G.nodes)-1,1))
     queue = [start]  # first visited node
     path = str(start)  # first node
-    end = 5
+    end = sink_node
     temp_qval = dict()
     initial_delay = 0
     tx_energy = 0
     rx_energy = 0
 
-
-    #cost = True
-    for item in E_vals:
-        if item <= 0:
-            #cost = False
-            print("Energy cannot be negative!")
-            print("The E_Vals in episode number {} is {} ".format(i+1, E_vals))
-
-    '''if not cost:
-        continue'''
-        #break
-
-    print('node_neigh:', node_neigh)
     while True:
-        for neigh in node_neigh[start]:
-            #print('node_neigh(start1):', node_neigh[start])
-            if E_vals[neigh] <= 0:
-                #print("The neigh and the others are {} and {} ".format(neigh, node_neigh[start]))
-                deleted_neigh.append(neigh)
-                try:
-                    del node_neigh[neigh]
-                except KeyError:
-                    pass
+        for neigh in node_neighbors[start]:
+            reward = math.sqrt(math.pow((xy[start][0] - xy[neigh][0]), 2) + math.pow((xy[start][1] - xy[neigh][1]), 2))
 
-                '''for item in node_neigh.keys():
-                    for index in range(len(node_neigh[item])):
-                        if  neigh == node_neigh[item][index]:
-                            node_neigh[item].remove(node_neigh[item][index])
-                            print('node_neigh[item][index]:', node_neigh[item][index])
-                            #node_neigh[item].remove(node_neigh[item][index])'''
-                #node_neigh[start].remove(neigh)
-            #print('node_neigh(start2):', node_neigh[start])
-            temp_qval[neigh] = (1 - learning_rate) * path_Q_values[start][neigh] + learning_rate * (R[start][neigh] + Q_vals[neigh])
+            temp_qval[neigh] = (1 - learning_rate) * path_q_values[start][neigh] + learning_rate * (reward + q_values[neigh])
 
         copy_q_values = {key: value for key, value in temp_qval.items() if key not in queue}
         # next_hop = min(temp_qval.keys(), key=(lambda k: temp_qval[k]))  #determine the next hop based on the minimum qvalue but ignore the visited node qvalue
@@ -136,23 +99,23 @@ for i in range(num_of_episodes):
             # Get random action
             next_hop = min(copy_q_values.keys(), key=(lambda k: copy_q_values[k]))
 
-        initial_delay += R[start][next_hop]
 
-        # copy_q_values = {key: value for key,value in temp_qval.items() if key not in queue}
 
-        # print("The updated qvalue is", copy_q_values)
-        # print("The next hop is", next_hop)
+
         queue.append(next_hop)
 
-        path_Q_values[start][next_hop] = temp_qval[next_hop]  # update the path qvalue of the next hop
-        Q_vals[start] = temp_qval[next_hop]  # update the qvalue of the start node
+        path_q_values[start][next_hop] = temp_qval[next_hop]    # update the path qvalue of the next hop
+        q_values[start] = temp_qval[next_hop]                   # update the qvalue of the start node
 
-        # sum_Q[i] = sum(Q_vals)/len(Q_vals)
-        mean_Qvals = sum(Q_vals) / (len(Q_vals) * max(Q_vals))
-        E_vals[start] = E_vals[start] - Etx[start][next_hop]  # update the start node energy
-        E_vals[next_hop] = E_vals[next_hop] - Erx[start][next_hop]  # update the next hop energy
-        tx_energy += Etx[start][next_hop]
-        rx_energy += Erx[start][next_hop]
+        mean_Qvals = sum([q_values[k] for k in q_values]) / (len(q_values) * max([q_values[k] for k in q_values]))
+        dis = math.sqrt(math.pow((xy[start][0] - xy[next_hop][0]), 2) + math.pow((xy[start][1] - xy[next_hop][1]), 2))
+        etx = electronic_energy * data_packet_size + amplifier_energy * data_packet_size * math.pow(dis, 2)
+        erx = electronic_energy * data_packet_size
+        e_values[start] = e_values[start] - etx                      # update the start node energy
+        e_values[next_hop] = e_values[next_hop] - erx                # update the next hop energy
+        tx_energy += etx
+        rx_energy += erx
+        initial_delay += dis
 
 
         path = path + "->" + str(next_hop)  # update the path after each visit
