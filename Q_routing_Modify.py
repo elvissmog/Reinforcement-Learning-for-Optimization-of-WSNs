@@ -127,7 +127,6 @@ for rdn in range(num_of_episodes):
         if next_hop == end:
             break
 
-
     delay.append(initial_delay)
     E_consumed.append(tx_energy + rx_energy)
     mean_Q.append(mean_Qvals)
