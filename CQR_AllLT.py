@@ -211,7 +211,7 @@ for rdn in range(episodes):
             
             xy.pop(index)
             
-            dead_node= index
+            dead_node = index
     
 
     for ind in list_unweighted_edges:
@@ -220,9 +220,6 @@ for rdn in range(episodes):
 
     update_evals = {index: item for index, item in E_vals.items() if item > 0}
 
-
-
-    #print('Original edges:', list_unweighted_edges)
     if cost == 1:
         print('cost:', cost)
 
