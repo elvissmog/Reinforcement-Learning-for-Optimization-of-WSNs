@@ -64,7 +64,7 @@ epsilon = 0.0
 
 # initialize starting point
 
-num_of_episodes = 10000000
+num_of_episodes = 84000
 mean_Q = []
 E_consumed = []
 delay = []
@@ -97,7 +97,9 @@ for rdn in range(num_of_episodes):
             next_hop = random.choice(list(copy_q_values.keys()))
         else:
             # Get random action
+
             next_hop = min(copy_q_values.keys(), key=(lambda k: copy_q_values[k]))
+
 
 
         queue.append(next_hop)
@@ -138,9 +140,10 @@ for rdn in range(num_of_episodes):
 
         if item <= node_energy_limit:
             print('Index:', index)
-            print('Evals:', e_values)
+            #print('Qvals:', q_values)
+            #print('PQ_vals:', path_q_values)
             cost = cost + 1
-            print("Energy cannot be negative!")
+            print("Energy of a node has gone behold the threshold!")
             print("The final round is", rdn)
 
             xy.pop(index)
@@ -153,36 +156,20 @@ for rdn in range(num_of_episodes):
 
     update_evals = {index: item for index, item in e_values.items() if item > node_energy_limit}
 
-    # print('Original edges:', list_unweighted_edges)
     if cost == 1:
 
-        try:
-            graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, update_edges)
+        graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, update_edges)
 
-            e_values = update_evals
-
-
-        except ValueError:
-            break
-
+        e_values = update_evals
+        print('node_neighbours:', node_neighbors)
+        print('update_evals:', e_values)
 
         cost = 0
 
     list_unweighted_edges = update_edges
 
 
-
-
-'''print('Round:', round)
-print('Delay:', delay)
-print('Total Energy:', EE_consumed)
-print('Energy:', E_consumed)
-print('Average_QVals:', mean_Q)
-print('Length Round:', len(round))
-print('Length Delay:', len(delay))
-print('Length Q_Val:', len(mean_Q))
-print('Length Energy:', len(EE_consumed))
-
+'''
 plt.plot(round, mean_Q)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
@@ -200,12 +187,7 @@ plt.xlabel('Round')
 plt.ylabel('Energy Consumption (Joules)')
 plt.title('Energy Consumption for each round')
 plt.show()
-
-plt.plot(round, EE_consumed)
-plt.xlabel('Round')
-plt.ylabel('Total Energy Consumption (Joules)')
-plt.title('Total Energy Consumption for each round')
-plt.show()'''
+'''
 
 
 
