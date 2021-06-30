@@ -141,7 +141,6 @@ for rdn in range(num_of_episodes):
                 rx_energy += erx
                 initial_delay += dis
 
-
                 path = path + "->" + str(next_hop)  # update the path after each visit
 
 
