@@ -71,7 +71,6 @@ for index in range(len(xy2)):
     xy[index] = xy2[index]
 
 
-
 # initialization of network parameters
 
 discount_factor = 0
