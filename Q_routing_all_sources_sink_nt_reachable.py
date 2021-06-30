@@ -143,7 +143,6 @@ for rdn in range(num_of_episodes):
 
                 path = path + "->" + str(next_hop)  # update the path after each visit
 
-
                 start = next_hop
 
                 if next_hop == sink_node:
