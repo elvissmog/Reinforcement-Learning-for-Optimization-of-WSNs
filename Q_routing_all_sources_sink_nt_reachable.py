@@ -7,17 +7,17 @@ import random
 
 # initialization of network parameters
 learning_rate = 0.7
-initial_energy = 200  # Joules
+initial_energy = 100  # Joules
 sink_node_energy = 200000
 data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
-node_energy_limit = 2
+node_energy_limit = 10
 epsilon = 0.0
 transmission_range = 50
 sink_node = 100
-num_of_episodes = 300000
+num_of_episodes = 5000000
 
 #xy = {0: (1, 3), 1: (2.5, 5), 2: (2.5, 1), 3: (4.5, 5), 4: (4.5, 1), 5: (6, 3)}
 #list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
@@ -41,8 +41,9 @@ def build_graph(positions, links):
 
     #Adding unweighted edges to the graph and calculating the distances
     for u, v in links:
-        G.add_edge(u, v, weight = (math.ceil(math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow((position_array[u][1] - position_array[v][1]), 2)))/transmission_range))
-
+        distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow((position_array[u][1] - position_array[v][1]), 2))
+        nor_distance = math.ceil(distance / transmission_range)
+        G.add_edge(u, v, weight=nor_distance)
     # The dictionary of neighbors of all nodes in the graph
     node_neigh = {}
     for n in G.nodes:
@@ -121,8 +122,6 @@ for rdn in range(num_of_episodes):
 
                     next_hop = min(copy_q_values.keys(), key=(lambda k: copy_q_values[k]))
 
-
-
                 queue.append(next_hop)
 
                 path_q_values[node][start][next_hop] = temp_qval[next_hop]    # update the path qvalue of the next hop
@@ -130,10 +129,11 @@ for rdn in range(num_of_episodes):
 
                 mean_Qvals = sum([q_values[node][k] for k in q_values[node]]) / (len(q_values[node]) * max([q_values[node][k] for k in q_values[node]]))
                 dis = math.sqrt(math.pow((xy[start][0] - xy[next_hop][0]), 2) + math.pow((xy[start][1] - xy[next_hop][1]), 2))
-                if dis <= d_o:
-                    etx = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow(dis, 2)
+                nor_dis = math.ceil(dis / transmission_range)
+                if nor_dis <= d_o:
+                    etx = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow(nor_dis, 2)
                 else:
-                    etx = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow(dis, 4)
+                    etx = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow(nor_dis, 4)
                 erx = electronic_energy * data_packet_size
                 e_values[start] = e_values[start] - etx                      # update the start node energy
                 e_values[next_hop] = e_values[next_hop] - erx                # update the next hop energy
@@ -152,10 +152,11 @@ for rdn in range(num_of_episodes):
             E_consumed.append(tx_energy + rx_energy)
             mean_Q.append(mean_Qvals)
 
-        path_f.append(path)
+        #path_f.append(path)
         Av_mean_Q.append(sum(mean_Q) / len(mean_Q))
         Av_delay.append(sum(delay) / len(delay))
         Av_E_consumed.append(sum(E_consumed))
+        No_Alive_Node.append(len(graph.nodes) - 1)
         round.append(rdn)
 
 
@@ -178,19 +179,18 @@ for rdn in range(num_of_episodes):
     update_evals = {index: item for index, item in e_values.items() if item > node_energy_limit}
 
     if len(dead_node) >= 1:
-        print('Energy of node has gone below a threshold')
-        print('dead nodes:', dead_node)
-        print("The lifetime at this point is", rdn)
+        #print('Energy of node has gone below a threshold')
+        #print('dead nodes:', dead_node)
+        #print("The lifetime at this point is", rdn)
 
 
         try:
             graph, node_neighbors, q_values, e_values, path_q_values = build_graph(xy, list_unweighted_edges)
 
             e_values = update_evals
-            print('new nodes:', xy)
-            print('Updated Evals:', update_evals)
-            print('updated_node_neighbours:', node_neighbors)
-
+            #print('new nodes:', xy)
+            #print('Updated Evals:', update_evals)
+            #print('updated_node_neighbours:', node_neighbors)
 
         except ValueError:
 
@@ -203,29 +203,35 @@ for rdn in range(num_of_episodes):
             profit = False
 
     if not profit:
+        print('lifetime:', rdn)
         break
 
 
-
-'''
-plt.plot(round, mean_Q)
+plt.plot(round, Av_mean_Q)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
 
-plt.plot(round, delay)
+plt.plot(round, Av_delay)
 plt.xlabel('Round')
 plt.ylabel('Delay (s)')
 plt.title('Delay for each round')
 plt.show()
 
-plt.plot(round, E_consumed)
+plt.plot(round, Av_E_consumed)
 plt.xlabel('Round')
 plt.ylabel('Energy Consumption (Joules)')
 plt.title('Energy Consumption for each round')
 plt.show()
-'''
+
+plt.plot(round, No_Alive_Node)
+plt.xlabel('Round')
+plt.ylabel('NAN')
+plt.title('No of Alive Nodes in each round')
+plt.show()
+
+
 
 
 
