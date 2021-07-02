@@ -205,13 +205,11 @@ for rdn in range(num_of_episodes):
         No_Alive_Node.append(len(graph.nodes) - 1)
         round.append(rdn)
 
-
     dead_node = []
 
     for index, item in e_values.items():
 
         if item <= node_energy_limit:
-
 
             dead_node.append(index)
 
@@ -237,8 +235,8 @@ for rdn in range(num_of_episodes):
 
             e_values = update_evals
             #print('hopcounts:', h_counts)
-            print('Updated Evals:', e_values)
-            print('updated_node_neighbours:', node_neighbors)
+            #print('Updated Evals:', e_values)
+            #print('updated_node_neighbours:', node_neighbors)
 
         except ValueError:
 
