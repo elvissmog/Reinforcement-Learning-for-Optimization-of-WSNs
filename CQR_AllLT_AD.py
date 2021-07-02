@@ -23,7 +23,7 @@ def build_graph(positions, links):
         nor_distance = math.ceil(distance / transmission_range)
         G.add_edge(u, v, weight=nor_distance)
 
-    z = Yamada(graph = G, n_trees = np.inf)
+    z = Yamada(graph = G, n_trees = 500)
     all_msts = z.spanning_trees()
     node_neigh = []
     for T in all_msts:
@@ -117,7 +117,7 @@ start_time = time.time()
 for rdn in range(episodes):
 
     # print("Edges:", list_unweighted_edges)
-
+    #print('len_rts:', len(rtp))
     initial_state = random.choice(range(0, len(rts), 1))
     delay = 0
     tx_energy = 0
@@ -216,6 +216,8 @@ for rdn in range(episodes):
             graph, rts, rtp, E_vals, q_matrix = build_graph(xy, list_unweighted_edges)
 
             E_vals = update_evals
+            print('dead nodes:', dead_node)
+            print("The lifetime at this point is", rdn)
             #update_qmatrix = np.ones((len(rts), len(rts)))
             #q_matrix = update_qmatrix * new_q
 
