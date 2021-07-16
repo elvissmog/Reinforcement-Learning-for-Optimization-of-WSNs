@@ -48,19 +48,16 @@ for u, v in list_unweighted_edges:
 # initialization of network parameters
 discount_factor = 0.0
 learning_rate = 0.7
-initial_energy = 500  # Joules
-data_packet_size = 320  # bits
-control_packet_size = 48 #bits
-electronic_energy = 50e-9  # Joules/bit 5
-e_fs = 10e-12  # Joules/bit/(meter)**2
-e_mp = 0.0013e-12 #Joules/bit/(meter)**4
-node_energy_limit = 0.001
+initial_energy = 1000        # Joules
+data_packet_size = 512      # bits
+electronic_energy = 50e-9   # Joules/bit 5
+e_fs = 10e-12               # Joules/bit/(meter)**2
+e_mp = 0.0013e-12           #Joules/bit/(meter)**4
+node_energy_limit = 10
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
-Ctx = [[0 for i in range(len(G))] for j in range(len(G))]
-Crx = [[0 for i in range(len(G))] for j in range(len(G))]
 initial_E_vals = [initial_energy for i in range(len(G))]
 ref_E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.1
@@ -95,15 +92,9 @@ for i in range(len(G)):
             else:
                 Etx[i][j] = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow((d[i][j]), 4)
             Erx[i][j] = electronic_energy * data_packet_size
-            if d[i][j] <= d_o:
-                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 2)
-            else:
-                Ctx[i][j] = electronic_energy * control_packet_size + e_fs * control_packet_size * math.pow((d[i][j]), 4)
-            Crx[i][j] = electronic_energy * control_packet_size
 
-#print('distance:', d)
 
-Y = Yamada(graph=G, n_trees = 50)
+Y = Yamada(graph=G, n_trees = np.inf)
 all_STs = Y.spanning_trees()
 
 # Ranking nodes in terms of hop count to sink for each MST
@@ -121,7 +112,7 @@ for T in all_STs:
     ST_paths.append(ST_path)
 
 #print('All paths:', ST_paths)
-print('length all ST:', len(ST_paths))
+#print('length all ST:', len(ST_paths))
 
 
 Q_matrix = np.zeros((len(ST_paths), len(ST_paths)))
@@ -141,11 +132,9 @@ start_time = time.time()
 
 for i in range(episodes):
 
-    initial_delay = 0
     tx_energy = 0
     rx_energy = 0
-    ctx_energy = 0
-    crx_energy = 0
+
     Episode.append(i)
 
     available_actions = [*range(0, len(ST_paths), 1)]
@@ -165,8 +154,6 @@ for i in range(episodes):
     chosen_ST = ST_paths[action]
     Action.append(action + 1)
 
-    ETX = []
-    ERX = []
     for node in chosen_ST:
         counter = 0
         while counter < len(chosen_ST[node]) - 1:
@@ -177,65 +164,47 @@ for i in range(episodes):
             tx_energy += traffic[node]*Etx[init_node][next_node]
             rx_energy += traffic[node]*Erx[init_node][next_node]
             counter += 1
-        ETX.append(tx_energy)
-        ERX.append(rx_energy)
-    #print('ref Evals:', ref_E_vals)
-    #print('initial Energy:', initial_E_vals)
-    #current_E_vals = initial_E_vals
-    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i != sink_node]
-    #print('Energy Consumption:', Energy_Consumption)
-    reward = max(Energy_Consumption)
 
-    #reward = (tx_energy + rx_energy)
-    #reward = min(E_vals)
+
+    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes]
+
+    reward = sum(Energy_Consumption)
+
     Min_value.append(reward)
 
-    '''
-    for node in chosen_ST:
-        counter = 0
-        while counter < len(chosen_ST[node]) - 1:
-            init_node = chosen_ST[node][counter]
-            next_node = chosen_ST[node][counter + 1]
-            E_vals[init_node] = E_vals[init_node] - Ctx[init_node][next_node]  # update the start node energy
-            E_vals[next_node] = E_vals[next_node] - Crx[init_node][next_node]  # update the next hop energy
-            ctx_energy += Ctx[init_node][next_node]
-            crx_energy += Crx[init_node][next_node]
-            counter += 1
-
-    '''
     # Maximum possible Q value in next step (for new state)
-    #max_future_q = np.max(Q_matrix[action, :])
+    max_future_q = np.max(Q_matrix[action, :])
 
     # Current Q value (for current state and performed action)
     current_q = Q_matrix[current_state, action]
 
     # And here's our equation for a new Q value for current state and action
-    new_q = (1 - learning_rate) * current_q + learning_rate * reward
-    #new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
+    #new_q = (1 - learning_rate) * current_q + learning_rate * reward
+    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
     # new_q = (1 - learning_rate) * current_q + learning_rate * discount_factor *reward
     Q_value.append(new_q)
 
     # Update Q table with new Q value
     Q_matrix[current_state, action] = new_q
 
+    E_consumed.append(tx_energy + rx_energy)
 
-    delay.append(initial_delay)
-    E_consumed.append(tx_energy + rx_energy + ctx_energy + crx_energy)
-    EE_consumed.append(sum(E_consumed))
 
     cost = True
     for index, item in enumerate(initial_E_vals):
         if item <= node_energy_limit:
-            print('E_vals:', initial_E_vals)
-            print('Index:', index)
+            #print('E_vals:', initial_E_vals)
+            #print('Index:', index)
             cost = False
-            print("Energy cannot be negative!")
+            #print("Energy cannot be negative!")
             print("The final round is", i)
+            print('Average Energy Consumption:', sum(E_consumed)/i)
+            print('Average remaining Energy:', sum([initial_E_vals[i] for i in G.nodes if i != sink_node])/(len(G.nodes)-1))
 
     if not cost:
         break
     #ref_E_vals = initial_E_vals
-    Min_nodes_RE.append(min(initial_E_vals))
+    #Min_nodes_RE.append(min(initial_E_vals))
     for i in range(len(ref_E_vals)):
         ref_E_vals[i] = initial_E_vals[i]
 
@@ -249,30 +218,16 @@ print("--- %s seconds ---" % (time.time() - start_time))
 my_data = Counter(Action)
 print('RT_UT:', my_data.most_common())  # Returns all unique items and their counts
 
+'''
 plt.plot(Episode, Min_value)
 plt.xlabel('Round')
-plt.ylabel('Minimum Energy')
-plt.legend()
-plt.show()
-
-'''
-#print('Delay:', delay)
-print('Total Energy:', EE_consumed)
-plt.plot(Episode, Action)
-plt.xlabel('Round')
-plt.ylabel('Discrete Action')
-# plt.title('Selected Action for each round')
+plt.ylabel('Energy Consumptions')
 plt.show()
 
 plt.plot(Episode, E_consumed)
 plt.xlabel('Rounds')
-plt.ylabel('Total Nodes Energy Consumption (Joules)')
-# plt.title('Energy Consumption for each round')
-plt.show()
-
-plt.plot(Episode, EE_consumed)
-plt.xlabel('Rounds')
-plt.ylabel('Total Energy Consumption (Joules)')
-# plt.title('Total Energy Consumption for each round')
+plt.ylabel('Energy Consumption (Joules)')
 plt.show()
 '''
+
+
