@@ -126,8 +126,8 @@ for rdn in range(episodes):
          # Get random action
         action = random.choice(available_actions)
 
-    y = action + 1
-    Actions.append(y)
+    #y = action + 1
+    #Actions.append(y)
     #print('Actions:', Actions)
 
     initial_state = action
