@@ -27,7 +27,7 @@ position_array = []
 for node in sorted(G):
     position_array.append(G.nodes[node]['pos'])
 distances = squareform(pdist(np.array(position_array)))
-#print('dis_max:', distances)
+
 for u, v in list_unweighted_edges:
 
     distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
@@ -42,9 +42,6 @@ T = nx.minimum_spanning_tree(G, algorithm='kruskal')
 node_neighT = {}  # the set of neighbors of all nodes in the graph
 for n in T.nodes:
     node_neighT[n] = list(T.neighbors(n))
-
-#print("The nodes and their neighbors are ", node_neighT)
-#print("Minimum Spanning Tree Edges is:", red_edges)
 
 node_neigh = {}  # the set of neighbors of all nodes in the graph
 for n in G.nodes:
