@@ -91,6 +91,7 @@ for i in range(len(G)):
 #Y = Yamada(graph=G, n_trees = np.inf)          #np.inf
 #all_STs = Y.spanning_trees()
 
+# Finding several MSTs using Prim's algorithm
 def prim(G, start):
     """Function recives a graph and a starting node, and returns a MST"""
     stopN = G.number_of_nodes() - 1
