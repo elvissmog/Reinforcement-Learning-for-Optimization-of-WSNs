@@ -41,9 +41,9 @@ for u, v in list_unweighted_edges:
     G.add_edge(u, v, weight=nor_distance)
 
 # initialization of network parameters
-discount_factor = 1
+discount_factor = 0
 learning_rate = 0.7
-initial_energy = 15        # Joules
+initial_energy = 1000        # Joules
 data_packet_size = 512      # bits
 electronic_energy = 50e-9   # Joules/bit 5
 e_fs = 10e-12               # Joules/bit/(meter)**2
@@ -137,6 +137,8 @@ all_STs = []
 for n in range(len(G.nodes)):
     y = prim(G,n)
     all_STs.append(y)
+
+print('Total number of MSTs:', len(all_STs))
 
 # Ranking nodes in terms of hop count to sink for each MST
 
@@ -251,12 +253,14 @@ print("--- %s seconds ---" % (time.time() - start_time))
 my_data = Counter(Action)
 print('RT_UT:', my_data.most_common())  # Returns all unique items and their counts
 
-'''
+
 plt.plot(Episode, Min_value)
+plt.plot(Episode, Q_value)
 plt.xlabel('Round')
-plt.ylabel('Energy Consumptions')
+plt.ylabel('Reward, Q_Value')
 plt.show()
 
+'''
 plt.plot(Episode, E_consumed)
 plt.xlabel('Rounds')
 plt.ylabel('Energy Consumption (Joules)')
