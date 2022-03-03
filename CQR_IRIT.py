@@ -159,6 +159,7 @@ for T in all_MSTs:
 
 Q_matrix = np.zeros((len(all_MSTs), len(all_MSTs)))
 initial_state = random.choice(range(0, len(all_MSTs), 1))
+print(Q_matrix)
 
 Q_value = []
 Min_value = []
