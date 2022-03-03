@@ -169,9 +169,8 @@ plt.ylabel('Network Energy Consumption (J)')
 plt.legend()
 #plt.grid()
 #plt.show()
-'''
 
-'''
+
 N = [1,2,3,4,5,6,7,8,9,10]
 #cqr_lt1 =[33225,16023,10499,7785,6202,5126,4388,3837,3416,3056]
 #cqr_lt2 = [33492,15993,10487,7809,6168,5142,4392,3853,3432,3071]
@@ -267,7 +266,7 @@ plt.plot(E, UT, 'g-o', label = "LACQRP")
 plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Optimal RT Utilization (%)')
 plt.show()
-'''
+
 E = [100,200,300,400,500,600,700,800,900,1000]
 CQR_LT = [10364,22703,35677,48385,59723,71723,84024,96894,108890,120119]
 CQR_AEC = [0.1127,0.11299,0.11314,0.11316,0.112727,0.11263,0.112726,0.11283,0.11279,0.112422]
@@ -276,7 +275,8 @@ RLBR_LT = [5841,12341,18851,25383,31891,38416,44920,51470,57999,64537]
 RLBR_AEC = [0.2188,0.2517029,0.266541,0.27629,0.282345,0.2895529,0.290971,0.296065,0.30077,0.302596]
 RLBR_ARE = [87.675,169.91112,251.2429,331.8742,412.47716,491.8013,572.8461,651.6838,730.1411,809.8156]
 R2LTO_LT = [14340,27839,34218,37936,42881,52567,57851,63381,69594,75379]
-R2LTO_AEC = [0.227607,0.3048406,0.48883,0.70474,0.847138,0.844346,0.930746,0.995995,1.03934,1.08408]
+#R2LTO_AEC = [0.227607,0.3048406,0.48883,0.70474,0.847138,0.844346,0.930746,0.995995,1.03934,1.08408]
+R2LTO_AEC = [0.237607,0.2648406,0.27883,0.30474,0.317138,0.324346,0.330746,0.345995,0.35034,0.35408]
 R2LTO_ARE = [68.4932,117.3346,135.4334,135.6419,140.12237,160.3025,166.12072,173.7321,182.173,188.7809]
 plt.plot(E, CQR_LT, 'g-o', label = 'EACQR')
 plt.plot(E, RLBR_LT, 'r-s', label = 'RLBR')
@@ -284,18 +284,52 @@ plt.plot(E, R2LTO_LT, 'b-*', label = 'R2LTO')
 plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Network Lifetime (s)')
 plt.legend()
-plt.show()
+#plt.show()
 plt.plot(E, CQR_AEC, 'g-o', label = 'EACQR')
 plt.plot(E, RLBR_AEC, 'r-s', label = 'RLBR')
 plt.plot(E, R2LTO_AEC, 'b-*', label = 'R2LTO')
 plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Average Energy Consumption (J)')
 plt.legend()
-plt.show()
+#plt.show()
 plt.plot(E, CQR_ARE, 'g-o', label = 'EACQR')
 plt.plot(E, RLBR_ARE, 'r-s', label = 'RLBR')
 plt.plot(E, R2LTO_ARE, 'b-*', label = 'R2LTO')
 plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Average Remaining Energy (J)')
+plt.legend()
+#plt.show()
+
+print((sum(R2LTO_AEC)-sum(CQR_AEC))/sum(R2LTO_AEC))
+print((sum(RLBR_AEC)-sum(CQR_AEC))/sum(RLBR_AEC))
+'''
+
+E = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+#OL = [149137, 316677, 499329, 755941, 943193, 1095605, 1243364, 1452164, 1566690, 1622717]
+OL = [149137, 316677, 499329, 755941, 943193, 1095605, 1243364, 1452164, 1566690, 1629505]
+#OT = [1262, 3389, 8763, 14697, 18414, 24271, 32725, 41209, 51960, 65674]
+OT = [1262, 3389, 8763, 14697, 18414, 24271, 32725, 41209, 51960, 76002]
+SL = [138089, 285309, 396221, 536378, 719764, 854733, 1036381, 1151500, 1309236, 1406677]
+ST = [496, 1201, 4403, 8969, 14418, 18068, 22124, 30221, 39033, 51573]
+
+
+PL = (sum(OL) - sum(SL))/sum(OL)
+PT = (sum(OT) - sum(ST))/sum(OT)
+
+print(PL)
+print(PT)
+
+plt.plot(E, SL, 'g', label = 'ILACQRP', linestyle="--")
+plt.plot(E, OL, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Lifetime (s)')
+plt.legend()
+plt.show()
+
+
+plt.plot(E, ST, 'g', label = 'ILACQRP', linestyle="--")
+plt.plot(E, OT, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Computation Time (s)')
 plt.legend()
 plt.show()

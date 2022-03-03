@@ -14,7 +14,7 @@ electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
 node_energy_limit = 10
-epsilon = 0.0
+epsilon = 0.1
 transmission_range = 10
 sink_node = 99
 num_of_episodes = 5000000
@@ -247,8 +247,9 @@ for rdn in range(num_of_episodes):
 
     if len(dead_node) >= 1:
         #print('Energy of node has gone below a threshold')
-        print('dead nodes:', dead_node)
+        #print('dead nodes:', dead_node)
         print("The lifetime at this point is", rdn)
+        print("Number of alive Nodes", len(xy))
 
 
         try:
@@ -258,8 +259,8 @@ for rdn in range(num_of_episodes):
 
             e_values = update_evals
             #print('hopcounts:', h_counts)
-            print('Updated Evals:', e_values)
-            print('updated_node_neighbours:', node_neighbors)
+            #print('Updated Evals:', e_values)
+            #print('updated_node_neighbours:', node_neighbors)
 
         except ValueError:
 
@@ -275,7 +276,7 @@ for rdn in range(num_of_episodes):
         print('lifetime:', rdn)
         break
 
-
+'''
 plt.plot(round, Av_mean_Q)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
@@ -293,6 +294,7 @@ plt.xlabel('Round')
 plt.ylabel('Energy Consumption (Joules)')
 plt.title('Energy Consumption for each round')
 plt.show()
+'''
 
 plt.plot(round, No_Alive_Node)
 plt.xlabel('Round')
