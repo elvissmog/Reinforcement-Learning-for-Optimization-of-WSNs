@@ -213,7 +213,7 @@ for index in range(len(x_y)):
 # initialization of network parameters
 discount_factor = 0
 learning_rate = 0.7
-initial_energy = 1000  # Joules
+initial_energy = 20  # Joules
 data_packet_size = 512  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 transmission_range = 50
