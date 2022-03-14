@@ -145,8 +145,8 @@ class Yamada(object):
             weight = self.graph[new_edge[0]][new_edge[1]]['weight']
             new_tree.add_edge(*new_edge, weight=weight)
         else:
-            raise ValueError("{} is not contained in parent graph" \
-                             .format(new_edge))
+            raise ValueError("{} is not contained in parent graph".format(new_edge))
+
         return new_tree
 
     def spanning_trees(self):
@@ -168,9 +168,8 @@ class Yamada(object):
                 # ensure number of trees does not exceed threshold
                 if len(self.trees) < self.n_trees:
                     # generate new spanning trees and their associated edge sets
-                    edge_set = self.new_spanning_trees(each['tree'],
-                                                       each['fixed'],
-                                                       each['restricted'])
+                    edge_set = self.new_spanning_trees(each['tree'], each['fixed'], each['restricted'])
+
                     # append every newly discovered tree
                     for every in edge_set:
                         new_edge_sets.append(every)
