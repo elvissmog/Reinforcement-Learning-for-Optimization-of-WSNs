@@ -39,12 +39,12 @@ nx.draw_networkx_labels(g, node_pos, node_color=node_col)
 # Draw the edges
 nx.draw_networkx_edges(g, node_pos, edge_color=edge_col)
 nx.draw_networkx_edge_labels(g, node_pos, edge_color=edge_col, edge_labels=edge_weight)
-c_t = nx.minimum_edge_cut(g, s=3, t=1)
-print('cut_set:', list(c_t))
-plt.axis('on')
-plt.show()
+#c_t = nx.minimum_edge_cut(g)
+#print('cut_set:', c_t)
+#plt.axis('on')
+#plt.show()
 
-'''
+
 
 def prim(G, start):
     """Function recives a graph and a starting node, and returns a MST"""
@@ -120,8 +120,8 @@ for M_edges in MST_edges:
 #print('No of unique_MSTs:', len(unique_MSTs))
 
 
-cr = 25   # crossover rate
-mr = 20   # mutation rate
+cr = 10   # crossover rate
+mr = 10   # mutation rate
 ng = 1   # numner of generations
 
 for idx in range(ng):
@@ -164,11 +164,49 @@ for idx in range(ng):
         sgr_ed = []
         for sgr in one_ind:
             sgr_ed.append(list(sgr.edges))
-        #print(sgr_ed)
-        one_edge = random.sample(sgr_ed[0], 1)
+        sgr_ed = sgr_ed[0]
+        #print('sgr ed:', sgr_ed)
+        one_edge = random.sample(sgr_ed, 1)
         #print('edge to delete:', one_edge)
+        sgr_ed.remove(one_edge[0])
+        #print('sgr ed:', sgr_ed)
         su_graph_edges = [value for value in list_unweighted_edges if value not in one_edge]
         #print('sub_graph_edges:', su_graph_edges)
+        su_graph = nx.Graph()
+        for su in range(len(xy)):
+            su_graph.add_node(su, pos=xy[su])
+        su_array = []
+        for node in sorted(su_graph):
+            su_array.append(su_graph.nodes[node]['pos'])
+
+        for (us, vs) in su_graph_edges:
+            dis = math.sqrt(math.pow((position_array[us][0] - position_array[vs][0]), 2) + math.pow(
+                (position_array[us][1] - position_array[vs][1]), 2))
+
+            su_graph.add_edge(us, vs, weight=dis)
+
+        cut_set = [value for value in su_graph_edges if value not in sgr_ed]
+        #print('cut_set:', cut_set)
+        add_edge = random.sample(cut_set, 1)
+        #print('add_edge:', add_edge)
+        sgr_ed = sgr_ed + add_edge
+        #print('sgr ed:', sgr_ed)
+        mu_graph = nx.Graph()
+        for mu in range(len(xy)):
+            su_graph.add_node(mu, pos=xy[mu])
+        mu_array = []
+        for node in sorted(mu_graph):
+            mu_array.append(mu_graph.nodes[node]['pos'])
+
+        for (ms, vu) in su_graph_edges:
+            dis = math.sqrt(math.pow((position_array[ms][0] - position_array[vu][0]), 2) + math.pow(
+                (position_array[ms][1] - position_array[vu][1]), 2))
+
+            mu_graph.add_edge(ms, vu, weight=dis)
+
+        if list(mu_graph.edges) not in ind_pop:
+            ind_pop.append(list(mu_graph.edges))
 
 
-'''
+    print('ind pop:', ind_pop)
+    print('len(ind_pop):', len(ind_pop))
