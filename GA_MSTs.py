@@ -1,5 +1,4 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 from pqdict import PQDict
 import math
 import random
@@ -25,26 +24,18 @@ for u, v in list_unweighted_edges:
 
     g.add_edge(u, v, weight = distance)
 
+mst = nx.minimum_spanning_tree(g)
+mst_edge = mst.edges()
+# Calculating the minimum spanning tree cost of g
+mst_edge_cost = []
+for tu, tv in mst_edge:
+    mst_edge_dis = math.sqrt(math.pow((position_array[tu][0] - position_array[tv][0]), 2) + math.pow(
+        (position_array[tu][1] - position_array[tv][1]), 2))
+    mst_edge_cost.append(math.ceil(mst_edge_dis))
 
-node_pos = nx.get_node_attributes(g, 'pos')
-edge_weight = nx.get_edge_attributes(g, 'weight')
+mst_cost = sum(mst_edge_cost)
 
-node_col = ['green']
-edge_col = ['black']
-
-# Draw the nodes
-nx.draw_networkx(g, node_pos, node_color=node_col, node_size=200)
-# Draw the node labels
-nx.draw_networkx_labels(g, node_pos, node_color=node_col)
-# Draw the edges
-nx.draw_networkx_edges(g, node_pos, edge_color=edge_col)
-nx.draw_networkx_edge_labels(g, node_pos, edge_color=edge_col, edge_labels=edge_weight)
-#c_t = nx.minimum_edge_cut(g)
-#print('cut_set:', c_t)
-#plt.axis('on')
-#plt.show()
-
-
+#print('mst_cost:', mst_cost)
 
 def prim(G, start):
     """Function recives a graph and a starting node, and returns a MST"""
@@ -97,8 +88,8 @@ for i in range(len(g.nodes)):
     if list(y.edges) not in MST_edges:
         MST_edges.append(list(y.edges))
 
-#print(MST_edges)
-#print(len(MST_edges))
+print('Initial population:', MST_edges)
+print('No of Initial population:', len(MST_edges))
 
 unique_MSTs = []
 for M_edges in MST_edges:
@@ -122,7 +113,7 @@ for M_edges in MST_edges:
 
 cr = 10   # crossover rate
 mr = 10   # mutation rate
-ng = 1   # numner of generations
+ng = 1   # number of generations
 
 for idx in range(ng):
     ind_pop = []
@@ -155,7 +146,7 @@ for idx in range(ng):
         if list(new_mst.edges) not in ind_pop:
             ind_pop.append(list(new_mst.edges))
 
-    #print(ind_pop)
+    #print('ind_pop:', ind_pop)
     #print(len(ind_pop))
     
     nm = int(100 / mr)
@@ -198,7 +189,7 @@ for idx in range(ng):
         for node in sorted(mu_graph):
             mu_array.append(mu_graph.nodes[node]['pos'])
 
-        for (ms, vu) in su_graph_edges:
+        for (ms, vu) in sgr_ed:
             dis = math.sqrt(math.pow((position_array[ms][0] - position_array[vu][0]), 2) + math.pow(
                 (position_array[ms][1] - position_array[vu][1]), 2))
 
@@ -208,5 +199,40 @@ for idx in range(ng):
             ind_pop.append(list(mu_graph.edges))
 
 
-    print('ind pop:', ind_pop)
-    print('len(ind_pop):', len(ind_pop))
+    #print('ind pop:', ind_pop)
+    #print('len(ind_pop):', len(ind_pop))
+
+    # Calculate the fitness of each individual in the intermidate population.
+    ind_pop_graphs = []
+    for ipg_edges in ind_pop:
+        ipg = nx.Graph()
+        for pg in range(len(xy)):
+            ipg.add_node(pg, pos=xy[pg])
+        pg_array = []
+        for node in sorted(ipg):
+            pg_array.append(ipg.nodes[node]['pos'])
+        # print(T_edges)
+        for (pu, pv) in ipg_edges:
+            dis = math.sqrt(math.pow((position_array[pu][0] - position_array[pv][0]), 2) + math.pow(
+                (position_array[pu][1] - position_array[pv][1]), 2))
+
+            ipg.add_edge(pu, pv, weight=dis)
+        ind_pop_graphs.append(ipg)
+
+    #print('ind_pop_graphs:', ind_pop_graphs)
+
+    for pop in ind_pop_graphs:
+        pop_edges = pop.edges()  # Extracting the spanning tree graph edges
+        #print(pop_edges)
+        pop_Spanning_Tree_Edge_Distances = []           # Calculating the minimum spanning tree cost of pop
+        for up, vp in pop_edges:
+            distance_edge = math.sqrt(math.pow((position_array[up][0] - position_array[vp][0]), 2) + math.pow(
+                (position_array[up][1] - position_array[vp][1]), 2))
+            pop_Spanning_Tree_Edge_Distances.append(math.ceil(distance_edge))
+        pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
+        #print("pop spanning tree cost is:", pop_Tree_Cost)
+        if pop_Tree_Cost <= mst_cost and pop_edges not in MST_edges:
+            MST_edges.append(list(pop_edges))
+
+    print('Final population:', MST_edges)
+    print('No of final population:', len(MST_edges))
