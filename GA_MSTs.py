@@ -23,7 +23,7 @@ for u, v in list_unweighted_edges:
     distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
         (position_array[u][1] - position_array[v][1]), 2))
 
-    g.add_edge(u, v, weight = distance)
+    g.add_edge(u, v, weight = math.ceil(distance/10))
 
 mst = nx.minimum_spanning_tree(g)
 mst_edge = mst.edges()
@@ -32,11 +32,11 @@ mst_edge_cost = []
 for tu, tv in mst_edge:
     mst_edge_dis = math.sqrt(math.pow((position_array[tu][0] - position_array[tv][0]), 2) + math.pow(
         (position_array[tu][1] - position_array[tv][1]), 2))
-    mst_edge_cost.append(math.ceil(mst_edge_dis))
+    mst_edge_cost.append(math.ceil(mst_edge_dis/10))
 
 mst_cost = sum(mst_edge_cost)
 
-#print('mst_cost:', mst_cost)
+print('mst_cost:', mst_cost)
 
 def prim(G, start):
     """Function recives a graph and a starting node, and returns a MST"""
@@ -74,24 +74,26 @@ def prim(G, start):
         distance = math.sqrt(math.pow((position_array[x][0] - position_array[y][0]), 2) + math.pow(
             (position_array[x][1] - position_array[y][1]), 2))
 
-        h.add_edge(x, y, weight=distance)
+        h.add_edge(x, y, weight=math.ceil(distance/10))
 
     return h
 
 MST = []
 
+# Extracting the edges of unique MST from Prims algorithm and storing in MST_edges
 MST_edges = []
 
 for i in range(len(g.nodes)):
     y = prim(g,i)
     MST.append(y)
     #print(list(y.edges))
-    if list(y.edges) not in MST_edges:
-        MST_edges.append(list(y.edges))
+    if set(y.edges()) not in MST_edges:
+        MST_edges.append(set(y.edges()))
 
-#print('Initial population:', MST_edges)
-#print('No of Initial population:', len(MST_edges))
+print('Initial population:', MST_edges)
+print('No of Initial population:', len(MST_edges))
 
+# Converting the unique MST edges into graph and storing in unique_MSTs
 
 unique_MSTs = []
 for M_edges in MST_edges:
@@ -106,7 +108,7 @@ for M_edges in MST_edges:
         dis = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
             (position_array[u][1] - position_array[v][1]), 2))
 
-        t.add_edge(u, v, weight=dis)
+        t.add_edge(u, v, weight=math.ceil(dis/10))
     unique_MSTs.append(t)
 
 #print('unique_MSTs:', unique_MSTs)
@@ -115,21 +117,24 @@ for M_edges in MST_edges:
 
 cr = 20   # crossover rate
 mr = 20   # mutation rate
-ng = 300   # number of generations
+ng = 2   # number of generations
 
 num_msts = []
 rounds = []
+fitness = []
+
+# Generating new MSTs from the unique_MSTs using genetic algorithm
 
 for idx in range(ng):
-    ind_pop = []
+    ind_pop = []                       # initializing an empty intermidiate population to store unique children
     
     nc = int(100/cr)
     for n_c in range(nc):
-        two_ind = random.sample(unique_MSTs, 2)
+        two_ind = random.sample(unique_MSTs, 2)    # Randomly selecting two parents from the population(unique_MST) to perform crosss over operator
 
         gr_ed = []
         for gr in two_ind:
-            gr_ed.append(list(gr.edges))
+            gr_ed.append(list(gr.edges()))
         #print(gr_ed)
         sub_graph_edges = list(set(gr_ed[0] + gr_ed[1]))
         #print(sub_graph_edges)
@@ -144,22 +149,23 @@ for idx in range(ng):
             dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow(
                 (position_array[su][1] - position_array[sv][1]), 2))
 
-            sub_graph.add_edge(su, sv, weight=dis)
+            sub_graph.add_edge(su, sv, weight=math.ceil(dis/10))
 
         new_mst = nx.minimum_spanning_tree(sub_graph)
         #print(list(new_mst.edges))
-        if list(new_mst.edges) not in ind_pop:
-            ind_pop.append(list(new_mst.edges))
+
+        if set(new_mst.edges()) not in ind_pop:
+            ind_pop.append(set(new_mst.edges()))
 
     #print('ind_pop:', ind_pop)
     #print(len(ind_pop))
     
     nm = int(100 / mr)
     for n_m in range(nm):
-        one_ind = random.sample(unique_MSTs, 1)
+        one_ind = random.sample(unique_MSTs, 1)   # Randomly selecting two parents from the population(unique_MST) to perform crosss over operator
         sgr_ed = []
         for sgr in one_ind:
-            sgr_ed.append(list(sgr.edges))
+            sgr_ed.append(list(sgr.edges()))
         sgr_ed = sgr_ed[0]
         #print('sgr ed:', sgr_ed)
         one_edge = random.sample(sgr_ed, 1)
@@ -179,7 +185,7 @@ for idx in range(ng):
             dis = math.sqrt(math.pow((position_array[us][0] - position_array[vs][0]), 2) + math.pow(
                 (position_array[us][1] - position_array[vs][1]), 2))
 
-            su_graph.add_edge(us, vs, weight=dis)
+            su_graph.add_edge(us, vs, weight=math.ceil(dis)/10)
 
         cut_set = [value for value in su_graph_edges if value not in sgr_ed]
         #print('cut_set:', cut_set)
@@ -198,15 +204,16 @@ for idx in range(ng):
             dis = math.sqrt(math.pow((position_array[ms][0] - position_array[vu][0]), 2) + math.pow(
                 (position_array[ms][1] - position_array[vu][1]), 2))
 
-            mu_graph.add_edge(ms, vu, weight=dis)
+            mu_graph.add_edge(ms, vu, weight=math.ceil(dis/10))
 
-        if list(mu_graph.edges) not in ind_pop:
-            ind_pop.append(list(mu_graph.edges))
+        if set(mu_graph.edges()) not in ind_pop:
+            ind_pop.append(set(mu_graph.edges()))
 
     #print('ind pop:', ind_pop)
     #print('len(ind_pop):', len(ind_pop))
 
     # Calculate the fitness of each individual in the intermidate population.
+    # Converting each individual in the intermidate population to graph and store in ind_pop_graph
     ind_pop_graphs = []
     for ipg_edges in ind_pop:
         ipg = nx.Graph()
@@ -220,26 +227,34 @@ for idx in range(ng):
             dis = math.sqrt(math.pow((position_array[pu][0] - position_array[pv][0]), 2) + math.pow(
                 (position_array[pu][1] - position_array[pv][1]), 2))
 
-            ipg.add_edge(pu, pv, weight=dis)
+            ipg.add_edge(pu, pv, weight=math.ceil(dis/10))
         ind_pop_graphs.append(ipg)
 
     #print('ind_pop_graphs:', ind_pop_graphs)
 
+    # Calculating the spanning tree cost of each individual in Population.
+    sum_mst_cost = []
     for pop in ind_pop_graphs:
-        pop_edges = pop.edges()  # Extracting the spanning tree graph edges
+        pop_edges = set(pop.edges())  # Extracting the spanning tree graph edges
         #print(pop_edges)
-        pop_Spanning_Tree_Edge_Distances = []           # Calculating the minimum spanning tree cost of pop
+        pop_Spanning_Tree_Edge_Distances = []
         for up, vp in pop_edges:
             distance_edge = math.sqrt(math.pow((position_array[up][0] - position_array[vp][0]), 2) + math.pow(
                 (position_array[up][1] - position_array[vp][1]), 2))
-            pop_Spanning_Tree_Edge_Distances.append(math.ceil(distance_edge))
+            pop_Spanning_Tree_Edge_Distances.append(math.ceil(distance_edge/10))
         pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
+        sum_mst_cost.append(pop_Tree_Cost)
         #print("pop spanning tree cost is:", pop_Tree_Cost)
         if pop_Tree_Cost <= mst_cost:
             if pop_edges not in MST_edges:
-                MST_edges.append(list(pop_edges))
+                MST_edges.append(pop_edges)
 
+    print('MST_edges after fitness:', MST_edges)
+    print('len_MST_edges after fitness:', len(MST_edges))
+
+    fitness.append(((len(sum_mst_cost))*mst_cost)/sum(sum_mst_cost))
     unique_sol = []
+
     for p_edges in MST_edges:
         us = nx.Graph()
         for up in range(len(xy)):
@@ -252,21 +267,31 @@ for idx in range(ng):
             dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow(
                 (position_array[su][1] - position_array[sv][1]), 2))
 
-            us.add_edge(su, sv, weight=dis)
+            us.add_edge(su, sv, weight=math.ceil(dis/10))
         unique_sol.append(us)
 
     final_pop = []
     for uni_pop in unique_sol:
-        if list(uni_pop.edges) not in final_pop:
-            final_pop.append(list(uni_pop.edges))
+        if set(uni_pop.edges()) not in final_pop:
+            final_pop.append(set(uni_pop.edges()))
 
-    #print('Final population:', final_pop)
-    #print('No of final population:', len(final_pop))
+    print('length_unique_sol:', len(unique_sol))
+    print('Final population:', final_pop)
+    print('No of final population:', len(final_pop))
+    MST_edges = final_pop
     unique_MSTs = unique_sol
     num_msts.append(len(unique_MSTs))
     rounds.append(idx)
 
+'''
 plt.plot(rounds, num_msts)
 plt.xlabel('Number of Generations')
 plt.ylabel('Number of MSTs')
 plt.show()
+
+
+plt.plot(rounds, fitness)
+plt.xlabel('Number of Generations')
+plt.ylabel('fitness')
+plt.show()
+'''
