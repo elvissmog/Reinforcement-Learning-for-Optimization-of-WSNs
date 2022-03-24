@@ -3,6 +3,8 @@ from pqdict import PQDict
 import math
 import random
 import matplotlib.pyplot as plt
+import time
+import json
 
 g = nx.Graph()
 
@@ -32,7 +34,7 @@ list_unweighted_edges = [(54, 100), (14, 96), (39, 93), (53, 91), (21, 78), (72,
 
 
 
-txr = 100   # Transmission range
+txr = 80   # Transmission range
 
 
 def is_tree_of_graph(child, parent):
@@ -79,6 +81,7 @@ mst_cost = sum(mst_edge_cost)
 
 #print('mst_cost:', mst_cost)
 
+start_time = time.time()
 def prim(G, start):
     """Function recives a graph and a starting node, and returns a MST"""
     stopN = G.number_of_nodes() - 1
@@ -158,7 +161,7 @@ for M_edges in MST_edges:
 
 cr = 10   # crossover rate
 mr = 10   # mutation rate
-ng = 100   # number of generations
+ng = 5000   # number of generations
 
 num_msts = []
 rounds = []
@@ -330,18 +333,29 @@ for idx in range(ng):
     rounds.append(idx)
     fitness.append(sum(sum_fitness))
 
-for fit in fitness:
-    nor_fitness.append(fit/max(fitness))
+print("--- %s seconds ---" % (time.time() - start_time))
 
+'''
+for num in num_msts:
+    nor_fitness.append(num/max(num_msts))
+'''
 print('length_unique_sol:', num_msts[-1])
+
+with open('test.txt', 'w') as f:
+    f.write(json.dumps(num_msts))
+
+# Now read the file back into a Python list object
+with open('test.txt', 'r') as f:
+    num_msts = json.loads(f.read())
 
 plt.plot(rounds, num_msts)
 plt.xlabel('Number of Generations')
 plt.ylabel('Number of MSTs')
 plt.show()
 
-
+'''
 plt.plot(rounds, nor_fitness)
 plt.xlabel('Number of Generations')
-plt.ylabel('fitness')
+plt.ylabel('Average Normalized Fitness')
 plt.show()
+'''
