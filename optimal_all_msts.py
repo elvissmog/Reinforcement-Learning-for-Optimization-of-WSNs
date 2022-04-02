@@ -310,16 +310,6 @@ if __name__ == "__main__":
 
     graph = nx.Graph()
 
-    # xy = [(1, 3), (2.5, 5), (2.5, 1), (4.5, 5), (4.5, 1), (6, 3)]
-    # list_unweighted_edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4), (3, 4), (3, 5), (4, 5)]
-    # list_unweighted_edges = [(1, 3), (1, 0), (0, 2), (1, 2), (2, 4), (3, 4), (3, 5), (5, 4), (2, 3)]
-
-    # xy = [(1, 2), (7, 2), (4, 0), (4, 6)]
-    # list_unweighted_edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]
-
-    # xy = [(1, 2), (7, 2), (4, 0), (4, 6)]
-    # list_unweighted_edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]
-
     with open('pos.txt', 'r') as filehandle:
         pos_list = json.load(filehandle)
 
@@ -334,7 +324,7 @@ if __name__ == "__main__":
     for ed in edges_list:
         list_unweighted_edges.append(tuple(ed))
 
-    print('No of edges:', len(list_unweighted_edges))
+    #print('No of edges:', len(list_unweighted_edges))
 
     for i in range(len(xy)):
         graph.add_node(i, pos=xy[i])
@@ -356,5 +346,5 @@ if __name__ == "__main__":
 
     MST = Y.spanning_trees()
     print('No of MSTs:', len(MST))
-    print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s seconds ---" % (time.time() - start_time))
 
