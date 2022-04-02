@@ -5,8 +5,8 @@ import json
 
 
 G = nx.Graph()
-n = 1000
-w = 5000
+n = 1001
+w = 20000
 
 for i in range(n):
     G.add_node(list(range(n))[i], pos=(random.randint(0, 1000), random.randint(0, 1000)))
@@ -33,10 +33,20 @@ for u, v in list_unweighted_edges:
 
 list_edges = list(G.edges())
 
+
 # open output file for writing
 with open('edges.txt', 'w') as filehandle:
     json.dump(list_edges, filehandle)
 
 with open('pos.txt', 'w') as filehandle:
     json.dump(position_array, filehandle)
+'''
 
+traffic = {}
+for node in G.nodes:
+    if node != sink_node:
+        traffic[node] = random.randint(1, 5)
+
+with open('traffic.txt', 'w') as filehandle:
+    json.dump(traffic, filehandle)
+'''
