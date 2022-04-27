@@ -433,7 +433,7 @@ for rdn in range(episodes):
             update_qmatrix = np.ones((len(rts), len(rts)))
             q_matrix = update_qmatrix * new_q
 
-        except ValueError:
+        except (ValueError, IndexError, KeyError):
             # Error = messagebox.showinfo("Enter proper values")
             print('lifetime:', rdn)
             break
