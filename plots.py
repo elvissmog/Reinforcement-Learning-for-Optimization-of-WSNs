@@ -302,7 +302,7 @@ plt.legend()
 
 print((sum(R2LTO_AEC)-sum(CQR_AEC))/sum(R2LTO_AEC))
 print((sum(RLBR_AEC)-sum(CQR_AEC))/sum(RLBR_AEC))
-'''
+
 
 E = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 #OL = [149137, 316677, 499329, 755941, 943193, 1095605, 1243364, 1452164, 1566690, 1622717]
@@ -332,4 +332,23 @@ plt.plot(E, OT, 'r', label = 'LACQRP', linestyle=":")
 plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Computation Time (s)')
 plt.legend()
+plt.show()
+'''
+
+import json
+
+with open('nqrvals.txt', 'r') as filehandle:
+    vals = json.load(filehandle)
+
+qvals = []
+for qv in vals:
+    qvals.append(qv)
+
+Round = []
+for j in range(len(qvals)):
+    Round.append(j)
+
+plt.plot(Round, qvals)
+plt.xlabel('Generation')
+plt.ylabel('Convergence rate')
 plt.show()
