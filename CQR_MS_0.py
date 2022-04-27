@@ -54,7 +54,7 @@ electronic_energy = 50e-9  # Joules/bit 5
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
 node_energy_limit = 10
-num_pac = 5
+num_pac = 1
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
@@ -219,10 +219,7 @@ for i in range(episodes):
         ref_E_vals[i] = initial_E_vals[i]
 
 
-#print('Round:', Episode)
-#print('Actions:', Action)
-#print('Reward:', Min_value)
-#print('Energy:', E_consumed)
+
 print("--- %s seconds ---" % (time.time() - start_time))
 print('Average nodes ME:', sum(Min_nodes_RE)/len(Min_nodes_RE))
 my_data = Counter(Action)
