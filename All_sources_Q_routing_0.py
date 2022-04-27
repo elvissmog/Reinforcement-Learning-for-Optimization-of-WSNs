@@ -230,13 +230,14 @@ with open('nqrvals.txt', 'r') as f:
     NQ = json.loads(f.read())
 
 
-'''
-plt.plot(round, Av_mean_Q)
+
+plt.plot(round, NQ)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
 
+'''
 plt.plot(round, Av_delay)
 plt.xlabel('Round')
 plt.ylabel('Average delay (s)')
