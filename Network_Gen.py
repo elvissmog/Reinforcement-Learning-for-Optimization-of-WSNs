@@ -6,7 +6,7 @@ import json
 
 G = nx.Graph()
 n = 1001
-w = 20000
+w = 10000
 
 for i in range(n):
     G.add_node(list(range(n))[i], pos=(random.randint(0, 1000), random.randint(0, 1000)))
@@ -35,10 +35,10 @@ list_edges = list(G.edges())
 
 
 # open output file for writing
-with open('edges.txt', 'w') as filehandle:
+with open('edges1.txt', 'w') as filehandle:
     json.dump(list_edges, filehandle)
 
-with open('pos.txt', 'w') as filehandle:
+with open('pos1.txt', 'w') as filehandle:
     json.dump(position_array, filehandle)
 '''
 
