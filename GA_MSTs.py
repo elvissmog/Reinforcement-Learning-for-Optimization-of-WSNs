@@ -6,16 +6,17 @@ import matplotlib.pyplot as plt
 import time
 import json
 
+start_time = time.time()
 g = nx.Graph()
 
-with open('pos.txt', 'r') as filehandle:
+with open('pos1.txt', 'r') as filehandle:
     pos_list = json.load(filehandle)
 
 xy = []
 for ps in pos_list:
     xy.append(tuple(ps))
 
-with open('edges.txt', 'r') as filehandle:
+with open('edges1.txt', 'r') as filehandle:
     edges_list = json.load(filehandle)
 
 list_unweighted_edges = []
@@ -117,10 +118,15 @@ for M_edges in MST_edges:
         t.add_edge(u, v, weight=math.ceil(dis/txr))
     unique_MSTs.append(t)
 
+print('No of initial Population:', len(unique_MSTs))
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
+start_time = time.time()
 
 cr = 10   # crossover rate
-mr = 100   # mutation rate
-ng = 100   # number of generations
+mr = 10   # mutation rate
+ng = 5000   # number of generations
 
 num_msts = []
 rounds = []
@@ -251,6 +257,12 @@ for idx in range(ng):
         if set(uni_pop.edges()) not in final_pop:
             final_pop.append(set(uni_pop.edges()))
 
+    cost = True
+    if len(unique_sol) == len(unique_MSTs):
+        cost = False
+    if not cost:
+        break
+
     MST_edges = final_pop
     unique_MSTs = unique_sol
     num_msts.append(len(unique_MSTs))
@@ -262,8 +274,9 @@ print("--- %s seconds ---" % (time.time() - start_time))
 '''
 for num in num_msts:
     nor_fitness.append(num/max(num_msts))
-'''
+
 print('length_unique_sol:', num_msts[-1])
+'''
 
 with open('test.txt', 'w') as f:
     f.write(json.dumps(num_msts))
@@ -271,6 +284,7 @@ with open('test.txt', 'w') as f:
 # Now read the file back into a Python list object
 with open('test.txt', 'r') as f:
     num_msts = json.loads(f.read())
+
 
 plt.plot(rounds, num_msts)
 plt.xlabel('Number of Generations')
