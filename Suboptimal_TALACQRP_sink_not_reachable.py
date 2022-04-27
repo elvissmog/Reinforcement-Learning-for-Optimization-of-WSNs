@@ -6,7 +6,7 @@ import time
 from pqdict import PQDict
 import json
 
-sink_node = 999
+sink_node = 1000
 
 def build_graph(positions, links):
     G = nx.Graph()
