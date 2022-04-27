@@ -2,8 +2,6 @@ import networkx as nx
 from collections import OrderedDict
 from sortedcontainers import SortedSet
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set()
