@@ -115,8 +115,8 @@ def prim(G, start):
 
 
     for (x, y) in mst:
-        distance = math.sqrt(math.pow((p[x][0] - p[y][0]), 2) + math.pow((p[x][1] - p[y][1]), 2))
-        h.add_edge(x, y, weight=math.ceil(distance))
+        dt = math.sqrt(math.pow((p[x][0] - p[y][0]), 2) + math.pow((p[x][1] - p[y][1]), 2))
+        h.add_edge(x, y, weight=math.ceil(dt))
 
     return h
 
@@ -126,7 +126,7 @@ MST = []
 MST_edges = []
 
 for i in range(len(G.nodes)):
-    y = prim(G,i)
+    y = prim(G, i)
     MST.append(y)
     #print(list(y.edges))
     if set(y.edges()) not in MST_edges:
@@ -207,7 +207,7 @@ for idx in range(ng):
             dis = math.sqrt(math.pow((p[us][0] - p[vs][0]), 2) + math.pow(
                 (p[us][1] - p[vs][1]), 2))
 
-            su_graph.add_edge(us, vs, weight=math.ceil(dis)/txr)
+            su_graph.add_edge(us, vs, weight=math.ceil(dis))
 
         cut_set = [value for value in su_graph_edges if value not in sgr_ed]
         #print('cut_set:', cut_set)
@@ -256,7 +256,7 @@ for idx in range(ng):
         for up, vp in pop_edges:
             dist_edge = math.sqrt(math.pow((p[up][0] - p[vp][0]), 2) + math.pow(
                 (p[up][1] - p[vp][1]), 2))
-            pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge/txr))
+            pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge))
         pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
 
         #print("pop spanning tree cost is:", pop_Tree_Cost)
@@ -354,7 +354,7 @@ for i in range(episodes):
     initial_state = action
 
     chosen_MST = ST_paths[action]
-    Action.append(action + 1)
+    #Action.append(action + 1)
 
     for node in chosen_MST:
         counter = 0
@@ -373,15 +373,15 @@ for i in range(episodes):
 
             initial_E_vals[nex] = initial_E_vals[nex] - num_pac * erx  # update the next hop energy
 
-            tx_energy += num_pac * etx
-            rx_energy += num_pac * erx
+            #tx_energy += num_pac * etx
+            #rx_energy += num_pac * erx
 
             counter += 1
 
 
     Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i!=sink_node]
 
-    reward = sum(Energy_Consumption)
+    reward = max(Energy_Consumption)
 
     Min_value.append(reward)
 
@@ -402,7 +402,7 @@ for i in range(episodes):
     # Update Q table with new Q value
     Q_matrix[current_state, action] = new_q
 
-    E_consumed.append(tx_energy + rx_energy)
+    #E_consumed.append(tx_energy + rx_energy)
 
     cost = True
     for index, item in enumerate(initial_E_vals):
