@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 import random
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from pqdict import PQDict
 from collections import Counter
 import json
@@ -11,8 +11,8 @@ import time
 
 
 # initialization of network parameters
-discount_factor = 0.1
-learning_rate = 0.8
+discount_factor = 0
+learning_rate = 0.9
 initial_energy = 100        # Joules
 data_packet_size = 1024      # bits
 electronic_energy = 50e-9   # Joules/bit 5
@@ -20,7 +20,7 @@ e_fs = 10e-12               # Joules/bit/(meter)**2
 e_mp = 0.0013e-12           #Joules/bit/(meter)**4
 node_energy_limit = 0
 num_pac = 1
-txr = 120
+txr = 150
 epsilon = 0.1
 episodes = 5000000
 sink_energy = 5000000
@@ -354,7 +354,7 @@ for i in range(episodes):
     initial_state = action
 
     chosen_MST = ST_paths[action]
-    #Action.append(action + 1)
+    Action.append(action + 1)
 
     for node in chosen_MST:
         counter = 0
