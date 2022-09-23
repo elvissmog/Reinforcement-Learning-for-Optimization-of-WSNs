@@ -1,12 +1,15 @@
-import random
+import matplotlib.pyplot as plt
 import networkx as nx
 import math
 import json
+import random
 
 
 G = nx.Graph()
-n = 1001
-w = 10000
+
+'''
+n = 101
+w = 5050
 
 for i in range(n):
     G.add_node(list(range(n))[i], pos=(random.randint(0, 1000), random.randint(0, 1000)))
@@ -19,11 +22,14 @@ for i in range(w):
         list_unweighted_edges.append((u, v))
 
 print('No of edges:', len(list_unweighted_edges))
+
+
 position_array = []
 for node in sorted(G):
     position_array.append(G.nodes[node]["pos"])
 
-print('No of nodes:', len(position_array))
+print('p:', position_array)
+print('e:', list_unweighted_edges)
 
 for u, v in list_unweighted_edges:
     distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
@@ -40,7 +46,7 @@ with open('edges1.txt', 'w') as filehandle:
 
 with open('pos1.txt', 'w') as filehandle:
     json.dump(position_array, filehandle)
-'''
+
 
 traffic = {}
 for node in G.nodes:
@@ -49,4 +55,7 @@ for node in G.nodes:
 
 with open('traffic.txt', 'w') as filehandle:
     json.dump(traffic, filehandle)
+
 '''
+
+

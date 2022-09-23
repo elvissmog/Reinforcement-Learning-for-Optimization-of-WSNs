@@ -20,10 +20,10 @@ electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
 node_energy_limit = 0
-num_pac = 1
-txr = 120
-epsilon = 0
-discount_factor = 1
+num_pac = 10
+txr = 150
+epsilon = 0.1
+discount_factor = 0.8
 wi = 1
 wii = 1
 wiii = 1
@@ -86,7 +86,7 @@ for n in G.nodes:
     node_neigh[n] = list(G.neighbors(n))
 
 
-path_Q_values = [[[0 for i in range(len(G))] for j in range(len(G))] for n in range(len(G))]
+
 E_vals = [initial_energy for i in range(len(G))]
 
 E_vals[sink_node] = 500000
@@ -109,6 +109,8 @@ for node in hop_counts:
 d_o = math.ceil(math.sqrt(e_fs/e_mp))
 
 Q_vals = [q_values for i in range(len(G))]
+path_Q_values = [[[0 for i in range(len(G))] for j in range(len(G))] for n in range(len(G))]
+
 
 #print('Q_vals:', Q_vals)
 #print("The hop counts to sink for the nodes are ", hop_counts)  # format is {node:count}
@@ -252,11 +254,13 @@ with open('dlaqrp.txt', 'w') as f:
 with open('dlaqrp.txt', 'r') as f:
     NQ = json.loads(f.read())
 
+'''
 plt.plot(round, NQ)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
+'''
 
 
 

@@ -333,22 +333,208 @@ plt.xlabel('Initial Node Energy (J)')
 plt.ylabel('Computation Time (s)')
 plt.legend()
 plt.show()
+
+
+New results
+
+#OL = [4958, 10031, 14930, 20109, 24920, 29835, 36526, 39500, 44442, 49433]
+#SL = [4148, 8176, 12426, 16810, 20741, 25102, 31767, 36222, 38473, 43257]
+#OT = [469, 477, 490, 508, 520, 527, 526, 526, 527, 531]
+#ST = [93, 96, 99, 105, 107, 107, 111, 112, 114, 117]
+#E = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+OL = [4883, 9879, 14699, 19797, 24533, 29395, 35987, 38917, 43786, 48703]
+SL = [4291, 8457, 12853, 17387, 21452, 25962, 32855, 37462, 39790, 44,737]
+OT = [10644, 10740, 10896, 12112, 12256, 12340,  12327, 12327, 12340, 12388]
+ST = [956, 986, 1012, 1073, 1093, 1093, 1133, 1143, 1163, 1193]
+E = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+plt.plot(E, SL, 'g', label = 'SOLACQRP', linestyle="--")
+plt.plot(E, OL, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Lifetime (s)')
+plt.legend()
+plt.show()
+
+
+plt.plot(E, ST, 'g', label = 'SOLACQRP', linestyle="--")
+plt.plot(E, OT, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Computation Time (s)')
+plt.legend()
+plt.show()
+
+
+
+OL = [49433, 25162, 16612, 12448, 10089, 8276, 7156, 6253, 5526, 5051]
+SL = [43257, 21802, 14021, 10255, 8315, 7153, 6081, 5227, 4616, 4127]
+OT = [526, 517, 514, 512,  512, 505, 490, 485, 475, 471]
+ST = [117, 108, 105, 99, 98, 93, 93, 94, 93, 93]
+P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+plt.plot(P, SL, 'g', label = 'SOLACQRP', linestyle="--")
+plt.plot(P, OL, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Packet Generation Rate (/s)')
+plt.ylabel('Network Lifetime (s)')
+plt.legend()
+plt.show()
+
+
+plt.plot(P, ST, 'g', label = 'SOLACQRP', linestyle="--")
+plt.plot(P, OT, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Packet Generation Rate (/s)')
+plt.ylabel('Computation Time (s)')
+plt.legend()
+plt.show()
+
+
+OL = [49433, 25162, 16612, 12448, 10089, 8276, 7156, 6253, 5526, 5051]
+SL = [43257, 21802, 14021, 10255, 8315, 7153, 6081, 5227, 4616, 4127]
+OT = [526, 517, 514, 512,  512, 505, 490, 485, 475, 471]
+ST = [117, 108, 105, 99, 98, 93, 93, 94, 93, 93]
+P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+y = (sum(OT) - sum(ST))/sum(OT)
+print(y)
+
+
+
+import json
+
+with open('sonan.txt', 'r') as filehandle:
+    svals = json.load(filehandle)
+
+with open('onan.txt', 'r') as filehandle:
+    ovals = json.load(filehandle)
+
+
+sqvals = []
+for qv in svals:
+    sqvals.append(qv)
+
+sRound = []
+for j in range(len(sqvals)):
+    sRound.append(j)
+
+oqvals = []
+for qv in ovals:
+    oqvals.append(qv)
+
+oRound = []
+for j in range(len(oqvals)):
+    oRound.append(j)
+
+
+plt.plot(sRound, sqvals, 'g', label = 'SOLACQRP', linestyle="--")
+plt.plot(oRound, oqvals, 'r', label = 'LACQRP', linestyle=":")
+
+plt.xlabel('Network Lifetime (s)')
+plt.ylabel('NAN')
+plt.legend()
+plt.show()
+
+
+#OL = [4883, 10879, 14699, 19797, 25533, 31395, 35987, 39917, 44786, 48703]
+#SL = [4291, 9457, 12853, 17387, 22452, 26962, 32855, 37462, 40790, 44737]
+#OT = [10644, 10740, 11196, 11512, 11956, 12040,  12327, 12627, 12740, 12988]
+#ST = [956, 986, 1012, 1073, 1093, 1093, 1133, 1143, 1163, 1193]
+#E = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+OL = [47765, 26313, 16052, 12029, 9750, 7998, 6916, 6044, 5342, 4883]
+SL = [44953, 24657, 14571, 10658, 8642, 7435, 6321, 5434, 4799, 4291]
+
+#OT = [526, 517, 514, 512,  512, 505, 490, 485, 475, 471]
+OT = [11982, 11679, 11612, 11667, 11567, 11409, 11071, 10959, 10734, 10644]
+
+#ST = [117, 108, 105, 99, 98, 93, 93, 94, 93, 93]
+ST = [1213, 1120, 1089, 1027, 1017, 1007, 956, 966, 956, 956]
+P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+
+y = (sum(OT) - sum(ST))/sum(OT)
+print(y)
+
+
+OL = [47765, 26313, 16052, 12029, 9750, 7998, 6916, 6044, 5342, 4883]
+SL = [44953, 24657, 14571, 10658, 8642, 7435, 6321, 5434, 4799, 4291]
+
+#OT = [526, 517, 514, 512,  512, 505, 490, 485, 475, 471]
+OT = [11982, 11679, 11612, 11667, 11567, 11409, 11071, 10959, 10734, 10644]
+
+#ST = [117, 108, 105, 99, 98, 93, 93, 94, 93, 93]
+ST = [1213, 1120, 1089, 1027, 1017, 1007, 956, 966, 956, 956]
+P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+plt.plot(P, SL, 'g', label = 'CRPLOGARL', linestyle="--")
+plt.plot(P, OL, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Packet Generation Rate (/s)')
+plt.ylabel('Network Lifetime (s)')
+plt.legend()
+plt.show()
+
+plt.plot(P, ST, 'g', label = 'CRPLOGARL', linestyle="--")
+plt.plot(P, OT, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Packet Generation Rate (/s)')
+plt.ylabel('Computation Time (s)')
+plt.legend()
+plt.show()
+
+
+OL = [4883, 9879, 14699, 19797, 24533, 29395, 35987, 38917, 43786, 48703]
+SL = [4291, 8457, 12853, 17387, 21452, 25962, 32855, 37462, 39790, 44737]
+#OT = [10644, 10740, 10896, 12112, 12256, 12340,  12327, 12327, 12340, 12388]
+OT = [10644, 10740, 11196, 11512, 11956, 12040,  12327, 12627, 12740, 12988]
+ST = [956, 986, 1012, 1073, 1093, 1093, 1133, 1143, 1163, 1193]
+E = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+plt.plot(E, SL, 'g', label = 'CRPLOGARL', linestyle="--")
+plt.plot(E, OL, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Network Lifetime (s)')
+plt.legend()
+plt.show()
+
+
+plt.plot(E, ST, 'g', label = 'CRPLOGARL', linestyle="--")
+plt.plot(E, OT, 'r', label = 'LACQRP', linestyle=":")
+plt.xlabel('Initial Node Energy (J)')
+plt.ylabel('Computation Time (s)')
+plt.legend()
+plt.show()
 '''
 
 import json
 
-with open('nqrvals.txt', 'r') as filehandle:
-    vals = json.load(filehandle)
+with open('sonan.txt', 'r') as filehandle:
+    svals = json.load(filehandle)
 
-qvals = []
-for qv in vals:
-    qvals.append(qv)
+with open('onan.txt', 'r') as filehandle:
+    ovals = json.load(filehandle)
 
-Round = []
-for j in range(len(qvals)):
-    Round.append(j)
 
-plt.plot(Round, qvals)
-plt.xlabel('Generation')
-plt.ylabel('Convergence rate')
+sqvals = []
+for qv in svals:
+    sqvals.append(qv)
+
+sRound = []
+for j in range(len(sqvals)):
+    sRound.append(j)
+
+oqvals = []
+for qv in ovals:
+    oqvals.append(qv)
+
+oRound = []
+for j in range(len(oqvals)):
+    oRound.append(j)
+
+
+plt.plot(sRound, sqvals, 'g', label = 'CRPLOGARL', linestyle="--")
+plt.plot(oRound, oqvals, 'r', label = 'LACQRP', linestyle=":")
+
+plt.xlabel('Network Lifetime (s)')
+plt.ylabel('NAN')
+plt.legend()
 plt.show()
+
+

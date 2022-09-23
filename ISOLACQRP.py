@@ -2,6 +2,7 @@ import numpy as np
 import networkx as nx
 import random
 import math
+import matplotlib.pyplot as plt
 from pqdict import PQDict
 from collections import Counter
 import json
@@ -120,7 +121,7 @@ for M_edges in MST_edges:
 
 cr = 1   # crossover rate
 mr = 50   # mutation rate
-ng = 200   # number of generations
+ng = 100   # number of generations
 
 
 # Generating new MSTs from the unique_MSTs using genetic algorithm
@@ -263,25 +264,24 @@ for idx in range(ng):
 
 # initialization of network parameters
 discount_factor = 0
-learning_rate = 0.7
-initial_energy = 1000        # Joules
+learning_rate = 0.9
+initial_energy = 1        # Joules
 data_packet_size = 1024      # bits
 electronic_energy = 50e-9   # Joules/bit 5
 e_fs = 10e-12               # Joules/bit/(meter)**2
 e_mp = 0.0013e-12           #Joules/bit/(meter)**4
-node_energy_limit = 10
+node_energy_limit = 0
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
 Erx = [[0 for i in range(len(G))] for j in range(len(G))]
 initial_E_vals = [initial_energy for i in range(len(G))]
 ref_E_vals = [initial_energy for i in range(len(G))]
-epsilon = 0.0
+epsilon = 0.1
 episodes = 5000000
 sink_energy = 5000000
-#sink_node = 100
 
-sink_node = 1000
+sink_node = 100
 
 
 initial_E_vals[sink_node] = sink_energy
@@ -319,6 +319,18 @@ for T in all_STs:
     ST_paths.append(ST_path)
 
 
+H_counts = []
+for T in all_STs:
+    hop_counts = {}
+    for n in T.nodes:
+        for path in nx.all_simple_paths(T, source=n, target=sink_node):
+            hop_counts[n] = len(path) - 1
+
+    hop_counts[sink_node] = 1  # hop count of sink
+
+    H_counts.append(hop_counts)
+
+
 Q_matrix = np.zeros((len(ST_paths), len(ST_paths)))
 initial_state = random.choice(range(0, len(ST_paths), 1))
 
@@ -339,7 +351,7 @@ for i in range(episodes):
     tx_energy = 0
     rx_energy = 0
 
-    Episode.append(i)
+
 
     available_actions = [*range(0, len(ST_paths), 1)]
 
@@ -365,14 +377,15 @@ for i in range(episodes):
             next_node = chosen_ST[node][counter + 1]
             initial_E_vals[init_node] = initial_E_vals[init_node] - Etx[init_node][next_node]  # update the start node energy
             initial_E_vals[next_node] = initial_E_vals[next_node] - Erx[init_node][next_node]  # update the next hop energy
-            tx_energy += Etx[init_node][next_node]
-            rx_energy += Erx[init_node][next_node]
+            #tx_energy += Etx[init_node][next_node]
+            #rx_energy += Erx[init_node][next_node]
             counter += 1
 
+    rew = [(ref_E_vals[i] - initial_E_vals[i]) / H_counts[action][i] for i in G.nodes if i != sink_node]  # Energy consumption per hop count
 
-    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in G.nodes if i!=sink_node]
 
-    reward = max(Energy_Consumption)
+    reward = min(rew)
+
 
     Min_value.append(reward)
 
@@ -387,12 +400,13 @@ for i in range(episodes):
     new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount_factor * max_future_q)
 
     Q_value.append(new_q)
-    CQ_value.append(sum(Q_value))
+    Episode.append(i)
+    #CQ_value.append(sum(Q_value))
 
     # Update Q table with new Q value
     Q_matrix[current_state, action] = new_q
 
-    E_consumed.append(tx_energy + rx_energy)
+    #E_consumed.append(tx_energy + rx_energy)
 
     cost = True
     for index, item in enumerate(initial_E_vals):
@@ -412,17 +426,19 @@ for i in range(episodes):
 
 print("--- %s seconds ---" % (time.time() - start_time))
 
-for qv in CQ_value:
-    NQ_value.append(qv/max(CQ_value))
+for qv in Q_value:
+    NQ_value.append(qv/max(Q_value))
 
 my_data = Counter(Action)
 print('RT_UT:', my_data.most_common())  # Returns all unique items and their counts
 
-with open('slqals.txt', 'w') as f:
+with open('islqals.txt', 'w') as f:
     f.write(json.dumps(NQ_value))
 
 # Now read the file back into a Python list object
-with open('slqals.txt', 'r') as f:
+with open('islqals.txt', 'r') as f:
     NQ_value = json.loads(f.read())
+
+
 
 

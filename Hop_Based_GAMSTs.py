@@ -46,8 +46,7 @@ for u, v in list_unweighted_edges:
 
     if distance <= txr:
         Trx_dis.append(distance)
-        g.add_edge(u, v, weight = math.ceil(distance))
-
+        g.add_edge(u, v, weight = 1)
 
 com_range = max(Trx_dis)
 
@@ -58,8 +57,8 @@ mst_edge = mst.edges()
 # Calculating the minimum spanning tree cost of g
 mst_edge_cost = []
 for tu, tv in mst_edge:
-    mst_edge_dis = math.sqrt(math.pow((p[tu][0] - p[tv][0]), 2) + math.pow((p[tu][1] - p[tv][1]), 2))
-    mst_edge_cost.append(math.ceil(mst_edge_dis))
+    mst_edge_dis = 1
+    mst_edge_cost.append(mst_edge_dis)
 
 mst_cost = sum(mst_edge_cost)
 
@@ -93,8 +92,8 @@ def prim(G, start):
         h.add_node(j, pos=xy[j])
 
     for (x, y) in mst:
-        distance = math.sqrt(math.pow((p[x][0] - p[y][0]), 2) + math.pow((p[x][1] - p[y][1]), 2))
-        h.add_edge(x, y, weight=math.ceil(distance))
+        distance = 1
+        h.add_edge(x, y, weight = distance)
 
     return h
 
@@ -115,18 +114,18 @@ for i in range(len(g.nodes)):
 unique_MSTs = []
 for M_edges in MST_edges:
     t = nx.Graph()
-    for pp in range(len(xy)):
-        t.add_node(pp, pos=xy[pp])
+    for p in range(len(xy)):
+        t.add_node(p, pos=xy[p])
 
     for (u, v) in M_edges:
-        dis = math.sqrt(math.pow((p[u][0] - p[v][0]), 2) + math.pow((p[u][1] - p[v][1]), 2))
+        dis = 1
 
-        t.add_edge(u, v, weight=math.ceil(dis))
+        t.add_edge(u, v, weight = dis)
     unique_MSTs.append(t)
 
 print('No of initial Population:', len(unique_MSTs))
 
-#print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s seconds ---" % (time.time() - start_time))
 
 start_time = time.time()
 
@@ -136,8 +135,8 @@ ng = 1000   # number of generations
 
 num_msts = []
 rounds = []
-fitness = []
-nor_fitness = []
+#fitness = []
+#nor_fitness = []
 
 # Generating new MSTs from the unique_MSTs using genetic algorithm
 
@@ -161,9 +160,9 @@ for idx in range(ng):
             sub_graph.add_node(sp, pos=xy[sp])
 
         for (su, sv) in sub_graph_edges:
-            dis = math.sqrt(math.pow((p[su][0] - p[sv][0]), 2) + math.pow((p[su][1] - p[sv][1]), 2))
+            dis = 1
 
-            sub_graph.add_edge(su, sv, weight=math.ceil(dis))
+            sub_graph.add_edge(su, sv, weight = dis)
 
         new_mst = nx.minimum_spanning_tree(sub_graph)
 
@@ -187,9 +186,9 @@ for idx in range(ng):
             su_graph.add_node(su, pos=xy[su])
 
         for (us, vs) in su_graph_edges:
-            dis = math.sqrt(math.pow((p[us][0] - p[vs][0]), 2) + math.pow((p[us][1] - p[vs][1]), 2))
+            dis = 1
 
-            su_graph.add_edge(us, vs, weight=math.ceil(dis))
+            su_graph.add_edge(us, vs, weight = dis)
 
         cut_set = [value for value in su_graph_edges if value not in sgr_ed]
         add_edge = random.sample(cut_set, 1)
@@ -199,9 +198,9 @@ for idx in range(ng):
             su_graph.add_node(mu, pos=xy[mu])
 
         for (ms, vu) in sgr_ed:
-            dis = math.sqrt(math.pow((p[ms][0] - p[vu][0]), 2) + math.pow((p[ms][1] - p[vu][1]), 2))
+            dis = 1
 
-            mu_graph.add_edge(ms, vu, weight=math.ceil(dis))
+            mu_graph.add_edge(ms, vu, weight = dis)
 
         if is_tree_of_graph(mu_graph, g):
             if set(mu_graph.edges()) not in ind_pop:
@@ -217,9 +216,9 @@ for idx in range(ng):
             ipg.add_node(pg, pos=xy[pg])
 
         for (pu, pv) in ipg_edges:
-            dis = math.sqrt(math.pow((p[pu][0] - p[pv][0]), 2) + math.pow((p[pu][1] - p[pv][1]), 2))
+            dis = 1
 
-            ipg.add_edge(pu, pv, weight=math.ceil(dis))
+            ipg.add_edge(pu, pv, weight = dis)
         ind_pop_graphs.append(ipg)
 
 
@@ -230,8 +229,8 @@ for idx in range(ng):
         pop_edges = set(pop.edges())  # Extracting the spanning tree graph edges
         pop_Spanning_Tree_Edge_Distances = []
         for up, vp in pop_edges:
-            dist_edge = math.sqrt(math.pow((p[up][0] - p[vp][0]), 2) + math.pow((p[up][1] - p[vp][1]), 2))
-            pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge))
+            dist_edge = 1
+            pop_Spanning_Tree_Edge_Distances.append(dist_edge)
         pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
         sum_mst_cost.append(pop_Tree_Cost)
         if pop_Tree_Cost <= mst_cost:
@@ -239,7 +238,7 @@ for idx in range(ng):
                 MST_edges.append(pop_edges)
 
 
-    sum_fitness.append(sum(sum_mst_cost))
+    #sum_fitness.append(sum(sum_mst_cost))
     unique_sol = []
 
     for p_edges in MST_edges:
@@ -247,9 +246,9 @@ for idx in range(ng):
         for up in range(len(xy)):
             us.add_node(up, pos=xy[up])
         for (su, sv) in p_edges:
-            dis = math.sqrt(math.pow((p[su][0] - p[sv][0]), 2) + math.pow((p[su][1] - p[sv][1]), 2))
+            dis = 1
 
-            us.add_edge(su, sv, weight=math.ceil(dis))
+            us.add_edge(su, sv, weight = dis)
         unique_sol.append(us)
 
     final_pop = []
@@ -267,16 +266,16 @@ for idx in range(ng):
     unique_MSTs = unique_sol
     num_msts.append(len(unique_MSTs))
     rounds.append(idx)
-    fitness.append(sum(sum_fitness))
+    #fitness.append(sum(sum_fitness))
 
 #print("--- %s seconds ---" % (time.time() - start_time))
 
-
+'''
 for num in num_msts:
     nor_fitness.append(num/max(num_msts))
 
 print('length_unique_sol:', num_msts[-1])
-
+'''
 
 with open('test.txt', 'w') as f:
     f.write(json.dumps(num_msts))
@@ -297,4 +296,3 @@ plt.xlabel('Number of Generations')
 plt.ylabel('Average Normalized Fitness')
 plt.show()
 '''
-

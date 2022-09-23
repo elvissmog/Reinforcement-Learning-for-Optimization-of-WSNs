@@ -10,16 +10,16 @@ start_time = time.time()
 
 # initialization of network parameters
 learning_rate = 0.9
-initial_energy = 1000  # Joules
-sink_node_energy = 200000
+initial_energy = 1  # Joules
+sink_node_energy = 500000
 data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
-node_energy_limit = 1
+node_energy_limit = 0
 epsilon = 0.0
 transmission_range = 1
-sink_node = 1000
+sink_node = 100
 num_of_episodes = 5000000
 
 
@@ -89,8 +89,8 @@ def build_graph(positions, links):
 
     q_vals = {}
     for ix in G.nodes:
-        #q_vals[ix] = (e_vals[ix] / hop_counts[ix])
-        q_vals[ix] = 0
+        q_vals[ix] = (e_vals[ix] / hop_counts[ix])
+        #q_vals[ix] = 0
 
     all_q_vals = {}
     for iix in G.nodes:
@@ -214,9 +214,9 @@ for rdn in range(num_of_episodes):
                 erx = electronic_energy * data_packet_size
                 e_values[start] = e_values[start] - etx                      # update the start node energy
                 e_values[next_hop] = e_values[next_hop] - erx                # update the next hop energy
-                tx_energy += etx
-                rx_energy += erx
-                initial_delay += dis
+                #tx_energy += etx
+                #rx_energy += erx
+                #initial_delay += dis
 
                 #path = path + "->" + str(next_hop)  # update the path after each visit
 
@@ -234,7 +234,7 @@ for rdn in range(num_of_episodes):
         #Av_delay.append(sum(delay) / len(delay))
         #Av_E_consumed.append(sum(E_consumed))
         No_Alive_Node.append(len(graph.nodes) - 1)
-        #round.append(rdn)
+        round.append(rdn)
 
     dead_node = []
 
@@ -256,7 +256,7 @@ for rdn in range(num_of_episodes):
     if len(dead_node) >= 1:
         #print('Energy of node has gone below a threshold')
         #print('dead nodes:', dead_node)
-        print("The lifetime at this point is", rdn)
+        #print("The lifetime at this point is", rdn)
         #print("Number of alive Nodes", len(xy))
 
 
@@ -268,7 +268,7 @@ for rdn in range(num_of_episodes):
             e_values = update_evals
 
 
-        except ValueError:
+        except (ValueError, IndexError, KeyError):
 
             break
 
@@ -284,6 +284,7 @@ for rdn in range(num_of_episodes):
 
 print("--- %s seconds ---" % (time.time() - start_time))
 
+
 with open('rttlonan.txt', 'w') as f:
     f.write(json.dumps(No_Alive_Node))
 
@@ -292,5 +293,9 @@ with open('rttlonan.txt', 'r') as f:
     No_Alive_Node = json.loads(f.read())
 
 
-
+plt.plot(round, No_Alive_Node)
+plt.xlabel('Round')
+plt.ylabel('NAN')
+plt.title('Number of Alive Node')
+plt.show()
 

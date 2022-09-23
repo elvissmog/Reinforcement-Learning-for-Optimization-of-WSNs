@@ -27,7 +27,7 @@ def build_graph(positions, links):
         nor_distance = math.ceil(distance / transmission_range)
         G.add_edge(u, v, weight=nor_distance)
 
-    z = Yamada(graph=G, n_trees=np.inf)  # np.inf
+    z = Yamada(graph=G, n_trees=10)  # np.inf
     all_msts = z.spanning_trees()
     node_neigh = []
     for T in all_msts:
@@ -91,7 +91,7 @@ for index in range(len(x_y)):
 # initialization of network parameters
 discount_factor = 0
 learning_rate = 0.9
-initial_energy = 1000  # Joules
+initial_energy = 10  # Joules
 data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 transmission_range = 1

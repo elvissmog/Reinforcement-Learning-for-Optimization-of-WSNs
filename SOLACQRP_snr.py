@@ -4,11 +4,12 @@ import random
 import math
 import time
 from pqdict import PQDict
+import matplotlib.pyplot as plt
 import json
 
 start_time = time.time()
 
-sink_node = 1000
+sink_node = 100
 
 def build_graph(positions, links):
     G = nx.Graph()
@@ -110,138 +111,142 @@ def build_graph(positions, links):
 
     # Generating new MSTs from the unique_MSTs using genetic algorithm
 
-    for idx in range(ng):
-        ind_pop = []  # initializing an empty intermidiate population to store unique children
-        nc = int(100 / cr)
+    if len(unique_MSTs) < 2:
+        all_msts = [mst]
+    else:
+        for idx in range(ng):
+            ind_pop = []  # initializing an empty intermidiate population to store unique children
+            nc = int(100 / cr)
 
-        # Crossover Operator
-        for n_c in range(nc):
-            two_ind = random.sample(unique_MSTs, 2)  # Randomly selecting two parents from the population(unique_MST) to perform crosss over operator
+            # Crossover Operator
+            for n_c in range(nc):
+                two_ind = random.sample(unique_MSTs, 2)  # Randomly selecting two parents from the population(unique_MST) to perform crosss over operator
 
-            gr_ed = []
-            for gr in two_ind:
-                gr_ed.append(list(gr.edges()))
-            # print(gr_ed)
-            sub_graph_edges = list(set(gr_ed[0] + gr_ed[1]))
-            # print(sub_graph_edges)
-            sub_graph = nx.Graph()
-            for sp in xy:
-                sub_graph.add_node(sp, pos=xy[sp])
+                gr_ed = []
+                for gr in two_ind:
+                    gr_ed.append(list(gr.edges()))
+                # print(gr_ed)
+                sub_graph_edges = list(set(gr_ed[0] + gr_ed[1]))
+                # print(sub_graph_edges)
+                sub_graph = nx.Graph()
+                for sp in xy:
+                    sub_graph.add_node(sp, pos=xy[sp])
 
-            for (su, sv) in sub_graph_edges:
-                dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow((position_array[su][1] - position_array[sv][1]), 2))
-                sub_graph.add_edge(su, sv, weight=math.ceil(dis / txr))
+                for (su, sv) in sub_graph_edges:
+                    dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow((position_array[su][1] - position_array[sv][1]), 2))
+                    sub_graph.add_edge(su, sv, weight=math.ceil(dis / txr))
 
-            new_mst = nx.minimum_spanning_tree(sub_graph)
-            # print(list(new_mst.edges))
+                new_mst = nx.minimum_spanning_tree(sub_graph)
+                # print(list(new_mst.edges))
 
-            if set(new_mst.edges()) not in ind_pop:
-                ind_pop.append(set(new_mst.edges()))
+                if set(new_mst.edges()) not in ind_pop:
+                    ind_pop.append(set(new_mst.edges()))
 
-        # Mutation Operator
-        nm = int(100 / mr)
-        for n_m in range(nm):
-            one_ind = random.sample(unique_MSTs, 1)  # Randomly selecting two parents from the population(unique_MST) to perform crosss over operator
+            # Mutation Operator
+            nm = int(100 / mr)
+            for n_m in range(nm):
+                one_ind = random.sample(unique_MSTs, 1)  # Randomly selecting two parents from the population(unique_MST) to perform crosss over operator
 
-            sgr_ed = []
-            for sgr in one_ind:
-                sgr_ed.append(list(sgr.edges()))
-            sgr_ed = sgr_ed[0]
-            # print('sgr ed:', sgr_ed)
-            one_edge = random.sample(sgr_ed, 1)
-            # print('edge to delete:', one_edge)
-            sgr_ed.remove(one_edge[0])
-            # print('sgr ed:', sgr_ed)
-            su_graph_edges = [value for value in list_unweighted_edges if value not in one_edge]
-            # print('sub_graph_edges:', su_graph_edges)
-            su_graph = nx.Graph()
-            for su in xy:
-                su_graph.add_node(su, pos=xy[su])
+                sgr_ed = []
+                for sgr in one_ind:
+                    sgr_ed.append(list(sgr.edges()))
+                sgr_ed = sgr_ed[0]
+                # print('sgr ed:', sgr_ed)
+                one_edge = random.sample(sgr_ed, 1)
+                # print('edge to delete:', one_edge)
+                sgr_ed.remove(one_edge[0])
+                # print('sgr ed:', sgr_ed)
+                su_graph_edges = [value for value in list_unweighted_edges if value not in one_edge]
+                # print('sub_graph_edges:', su_graph_edges)
+                su_graph = nx.Graph()
+                for su in xy:
+                    su_graph.add_node(su, pos=xy[su])
 
-            for (us, vs) in su_graph_edges:
-                dis = math.sqrt(math.pow((position_array[us][0] - position_array[vs][0]), 2) + math.pow(
-                    (position_array[us][1] - position_array[vs][1]), 2))
+                for (us, vs) in su_graph_edges:
+                    dis = math.sqrt(math.pow((position_array[us][0] - position_array[vs][0]), 2) + math.pow(
+                        (position_array[us][1] - position_array[vs][1]), 2))
 
-                su_graph.add_edge(us, vs, weight=math.ceil(dis) / txr)
+                    su_graph.add_edge(us, vs, weight=math.ceil(dis) / txr)
 
-            cut_set = [value for value in su_graph_edges if value not in sgr_ed]
-            # print('cut_set:', cut_set)
-            add_edge = random.sample(cut_set, 1)
-            # print('add_edge:', add_edge)
-            sgr_ed = sgr_ed + add_edge
-            # print('sgr ed:', sgr_ed)
-            mu_graph = nx.Graph()
-            for mu in xy:
-                su_graph.add_node(mu, pos=xy[mu])
+                cut_set = [value for value in su_graph_edges if value not in sgr_ed]
+                # print('cut_set:', cut_set)
+                add_edge = random.sample(cut_set, 1)
+                # print('add_edge:', add_edge)
+                sgr_ed = sgr_ed + add_edge
+                # print('sgr ed:', sgr_ed)
+                mu_graph = nx.Graph()
+                for mu in xy:
+                    su_graph.add_node(mu, pos=xy[mu])
 
-            for (ms, vu) in sgr_ed:
-                dis = math.sqrt(math.pow((position_array[ms][0] - position_array[vu][0]), 2) + math.pow(
-                    (position_array[ms][1] - position_array[vu][1]), 2))
+                for (ms, vu) in sgr_ed:
+                    dis = math.sqrt(math.pow((position_array[ms][0] - position_array[vu][0]), 2) + math.pow(
+                        (position_array[ms][1] - position_array[vu][1]), 2))
 
-                mu_graph.add_edge(ms, vu, weight=math.ceil(dis / txr))
+                    mu_graph.add_edge(ms, vu, weight=math.ceil(dis / txr))
 
-            if is_tree_of_graph(mu_graph, G):
-                if set(mu_graph.edges()) not in ind_pop:
-                    ind_pop.append(set(mu_graph.edges()))
+                if is_tree_of_graph(mu_graph, G):
+                    if set(mu_graph.edges()) not in ind_pop:
+                        ind_pop.append(set(mu_graph.edges()))
 
-        # Calculate the fitness of each individual in the intermidate population.
-        # Converting each individual in the intermidate population to graph and store in ind_pop_graph
-        ind_pop_graphs = []
-        for ipg_edges in ind_pop:
-            ipg = nx.Graph()
-            for pg in xy:
-                ipg.add_node(pg, pos=xy[pg])
+            # Calculate the fitness of each individual in the intermidate population.
+            # Converting each individual in the intermidate population to graph and store in ind_pop_graph
+            ind_pop_graphs = []
+            for ipg_edges in ind_pop:
+                ipg = nx.Graph()
+                for pg in xy:
+                    ipg.add_node(pg, pos=xy[pg])
 
-            for (pu, pv) in ipg_edges:
-                dis = math.sqrt(math.pow((position_array[pu][0] - position_array[pv][0]), 2) + math.pow(
-                    (position_array[pu][1] - position_array[pv][1]), 2))
+                for (pu, pv) in ipg_edges:
+                    dis = math.sqrt(math.pow((position_array[pu][0] - position_array[pv][0]), 2) + math.pow(
+                        (position_array[pu][1] - position_array[pv][1]), 2))
 
-                ipg.add_edge(pu, pv, weight=math.ceil(dis / txr))
-            ind_pop_graphs.append(ipg)
+                    ipg.add_edge(pu, pv, weight=math.ceil(dis / txr))
+                ind_pop_graphs.append(ipg)
 
-        # print('ind_pop_graphs:', ind_pop_graphs)
+            # print('ind_pop_graphs:', ind_pop_graphs)
 
-        # Calculating the spanning tree cost of each individual in Population.
+            # Calculating the spanning tree cost of each individual in Population.
 
-        for pop in ind_pop_graphs:
-            pop_edges = set(pop.edges())  # Extracting the spanning tree graph edges
-            # print(pop_edges)
-            pop_Spanning_Tree_Edge_Distances = []
-            for up, vp in pop_edges:
-                dist_edge = math.sqrt(math.pow((position_array[up][0] - position_array[vp][0]), 2) + math.pow(
-                    (position_array[up][1] - position_array[vp][1]), 2))
-                pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge / txr))
-            pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
+            for pop in ind_pop_graphs:
+                pop_edges = set(pop.edges())  # Extracting the spanning tree graph edges
+                # print(pop_edges)
+                pop_Spanning_Tree_Edge_Distances = []
+                for up, vp in pop_edges:
+                    dist_edge = math.sqrt(math.pow((position_array[up][0] - position_array[vp][0]), 2) + math.pow(
+                        (position_array[up][1] - position_array[vp][1]), 2))
+                    pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge / txr))
+                pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
 
-            # print("pop spanning tree cost is:", pop_Tree_Cost)
-            if pop_Tree_Cost <= mst_cost:
-                if pop_edges not in MST_edges:
-                    MST_edges.append(pop_edges)
+                # print("pop spanning tree cost is:", pop_Tree_Cost)
+                if pop_Tree_Cost <= mst_cost:
+                    if pop_edges not in MST_edges:
+                        MST_edges.append(pop_edges)
 
-        unique_sol = []
+            unique_sol = []
 
-        for p_edges in MST_edges:
-            us = nx.Graph()
-            for up in xy:
-                us.add_node(up, pos=xy[up])
+            for p_edges in MST_edges:
+                us = nx.Graph()
+                for up in xy:
+                    us.add_node(up, pos=xy[up])
 
-            for (su, sv) in p_edges:
-                dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow(
-                    (position_array[su][1] - position_array[sv][1]), 2))
+                for (su, sv) in p_edges:
+                    dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow(
+                        (position_array[su][1] - position_array[sv][1]), 2))
 
-                us.add_edge(su, sv, weight=math.ceil(dis / txr))
-            unique_sol.append(us)
+                    us.add_edge(su, sv, weight=math.ceil(dis / txr))
+                unique_sol.append(us)
 
-        final_pop = []
-        for uni_pop in unique_sol:
-            if set(uni_pop.edges()) not in final_pop:
-                final_pop.append(set(uni_pop.edges()))
+            final_pop = []
+            for uni_pop in unique_sol:
+                if set(uni_pop.edges()) not in final_pop:
+                    final_pop.append(set(uni_pop.edges()))
 
-        MST_edges = final_pop
-        unique_MSTs = unique_sol
+            MST_edges = final_pop
+            unique_MSTs = unique_sol
 
 
-    all_msts = unique_MSTs
+        all_msts = unique_MSTs
+        print('No of MSTs:', len(all_msts))
 
 
     MST_paths = []
@@ -279,14 +284,14 @@ def build_graph(positions, links):
     return G, all_msts, MST_paths, initial_e_vals, ref_e_vals, Q_matrix
 
 
-with open('edges.txt', 'r') as filehandle:
+with open('edges1.txt', 'r') as filehandle:
     edges_list = json.load(filehandle)
 
 list_unweighted_edges = []
 for ed in edges_list:
     list_unweighted_edges.append(tuple(ed))
 
-with open('pos.txt', 'r') as filehandle:
+with open('pos1.txt', 'r') as filehandle:
     pos_list = json.load(filehandle)
 
 x_y = []
@@ -300,20 +305,20 @@ for index in range(len(x_y)):
 # initialization of network parameters
 discount_factor = 0
 learning_rate = 0.9
-initial_energy = 1000  # Joules
+initial_energy = 1  # Joules
 data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 txr = 1              # Transmission range
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12  # Joules/bit/(meter)**4
-node_energy_limit = 1
+node_energy_limit = 0
 epsilon = 0.1
 episodes = 5000000
 sink_energy = 5000000
 num_pac = 1
 cr = 1  # crossover rate
-mr = 50  # mutation rate
-ng = 200  # number of generations
+mr = 100  # mutation rate
+ng = 100  # number of generations
 
 
 d_o = math.sqrt(e_fs / e_mp) / txr
@@ -321,7 +326,7 @@ d_o = math.sqrt(e_fs / e_mp) / txr
 #Cum_reward = []
 #Q_value = []
 #Min_value = []
-#Episode = []
+Episode = []
 #E_consumed = []
 #EE_consumed = []
 No_Alive_Node = []
@@ -401,6 +406,7 @@ for rdn in range(episodes):
     #E_consumed.append(tx_energy + rx_energy)
     #EE_consumed.append(sum(E_consumed))
     No_Alive_Node.append(len(xy) - 1)
+    Episode.append(rdn)
     cost = 0
 
     dead_node = []
@@ -449,4 +455,10 @@ with open('sonan.txt', 'w') as f:
 with open('sonan.txt', 'r') as f:
     No_Alive_Node = json.loads(f.read())
 
+
+plt.plot(Episode, No_Alive_Node)
+plt.xlabel('Round')
+plt.ylabel('Average Q-Value')
+plt.title('Q-Value Convergence ')
+plt.show()
 

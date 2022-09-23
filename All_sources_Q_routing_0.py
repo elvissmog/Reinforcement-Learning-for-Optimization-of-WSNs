@@ -69,13 +69,13 @@ for n in G.nodes:
     node_neigh[n] = list(G.neighbors(n))
 
 # initialization of network parameters
-learning_rate = 0.7
-initial_energy = 1000  # Joules
+learning_rate = 0.9
+initial_energy = 1  # Joules
 data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 50e-9
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12 #Joules/bit/(meter)**4
-node_energy_limit = 10
+node_energy_limit = 0
 
 d = [[0 for i in range(len(G))] for j in range(len(G))]
 Etx = [[0 for i in range(len(G))] for j in range(len(G))]
@@ -85,7 +85,7 @@ path_Q_values = [[[0 for i in range(len(G))] for j in range(len(G))] for n in ra
 E_vals = [initial_energy for i in range(len(G))]
 epsilon = 0.0
 
-sink_node = 1000
+sink_node = 100
 E_vals[sink_node] = 5000000
 #total_initial_energy = sum(E_vals)
 
