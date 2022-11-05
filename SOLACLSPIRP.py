@@ -322,13 +322,13 @@ samples = []
 k = 1
 #weights = np.random.uniform(-1.0, 1.0, size=k)
 initial_weight = 0
-stop_criterium = 10**-5
+stop_crit = 10**-5
 num_actions = len(ST_paths)
 learning_rate = 0.7
 discount_factor = 0
 gamma = 0.99
-epsilon = 1
-sample_size = 5                       #len(ST_paths)
+epsilon = 0.1
+sample_size = 10                       #len(ST_paths)
 
 A = 0
 b = 0
@@ -504,6 +504,176 @@ total_initial_energy = sum(initial_E_vals)
 
 initial_state = random.choice(range(0, len(ST_paths), 1))
 
+w_o = 0
+w_hat = w_o
+I_max = 1000
+
+w_list = []
+i_list = []
+
+
+for i_max in range(I_max):
+
+    w = w_hat
+
+    for sample in range(len(samples)):
+        phi = phi_matrix[samples[sample][0], samples[sample][1]]
+        act = np.argmin(phi_matrix[samples[sample][1], :])
+        # print('act:', act)
+        phi_next = phi_matrix[samples[sample][1], act]
+        r = samples[sample][3]
+        loss = phi - gamma * phi_next
+        A = A + phi * loss
+        b = b + phi * r
+    w_hat = b / A
+    # print('new_w:', new_w)
+
+    w_diff = ((w - w_hat)**2)**0.5
+
+    #print('w_diff:', w_diff)
+
+    w_list.append(w_hat)
+    i_list.append(i_max)
+
+    cost = True
+
+    if w_diff < stop_crit:
+        cost = False
+        print("The final round is", i_max)
+
+
+    if not cost:
+        break
+
+    #phi_matrix = new_w * phi_matrix
+
+print('w_list:', w_list)
+
+phi_matrix = w_hat * phi_matrix
+
+
+# Routing with the LSPI method
+
+for i in range(episodes):
+
+    tx_energy = 0
+    rx_energy = 0
+
+
+    available_actions = [*range(0, len(ST_paths), 1)]
+
+    current_state = initial_state
+
+    if random.random() >= 1 - epsilon:
+        # Get random action
+        action = random.choice(available_actions)
+    else:
+        # Get action from Q table
+        action = np.argmin(phi_matrix[current_state, :])
+
+    new_q = phi_matrix[current_state, action]
+
+    initial_state = action
+
+    chosen_MST = ST_paths[action]
+    Action.append(action)
+
+    for node in chosen_MST:
+        counter = 0
+        while counter < len(chosen_MST[node]) - 1:
+            ini = chosen_MST[node][counter]
+            nex = chosen_MST[node][counter + 1]
+            dis = math.ceil(math.sqrt(math.pow((p[ini][0] - p[nex][0]), 2) + math.pow((p[ini][1] - p[nex][1]), 2)))
+            # print('dis:', dis)
+            if dis <= d_o:
+                etx = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow(dis, 2)
+            else:
+                etx = electronic_energy * data_packet_size + e_mp * data_packet_size * math.pow(dis, 4)
+            erx = electronic_energy * data_packet_size
+
+            initial_E_vals[ini] = initial_E_vals[ini] - num_pac * etx  # update the start node energy
+
+            initial_E_vals[nex] = initial_E_vals[nex] - num_pac * erx  # update the next hop energy
+
+            #tx_energy += num_pac * etx
+            #rx_energy += num_pac * erx
+
+            counter += 1
+
+    Q_value.append(new_q)
+    Episode.append(i)
+    CQ_value.append(sum(Q_value))
+
+    cost = True
+    for index, item in enumerate(initial_E_vals):
+        if item <= node_energy_limit:
+            print('Index:', index)
+            cost = False
+            print("The final round is", i)
+            #print('Average Energy Consumption:', sum(E_consumed))
+            #print('Average remaining Energy:', sum([initial_E_vals[i] for i in G.nodes if i != sink_node])/(len(G.nodes)-1))
+
+    if not cost:
+        break
+
+    for i in range(len(ref_E_vals)):
+        ref_E_vals[i] = initial_E_vals[i]
+
+
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
+print('EC:', (total_initial_energy - sum(initial_E_vals))/len(Episode))
+
+for qv in Q_value:
+    NQ_value.append(qv/max(Q_value))
+
+my_data = Counter(Action)
+print('RT_UT:', my_data.most_common())  # Returns all unique items and their counts
+
+with open('slqals.txt', 'w') as f:
+    f.write(json.dumps(NQ_value))
+
+# Now read the file back into a Python list object
+with open('slqals.txt', 'r') as f:
+    NQ_value = json.loads(f.read())
+
+
+
+plt.plot(Episode, Action)
+plt.xlabel('Round')
+plt.ylabel('Action')
+plt.title('Action Convergence ')
+plt.show()
+
+plt.plot(Episode, NQ_value)
+plt.xlabel('Round')
+plt.ylabel('Average Q-Value')
+plt.title('Q-Value Convergence ')
+plt.show()
+
+plt.plot(Episode, Q_value)
+plt.xlabel('Round')
+plt.ylabel('Q-Value')
+plt.title('Q-Value Convergence ')
+plt.show()
+
+plt.plot(Episode, CQ_value)
+plt.xlabel('Round')
+plt.ylabel('Q-Value')
+plt.title('Q-Value Convergence ')
+plt.show()
+
+
+'''
+plt.plot(i_list, w_list)
+plt.xlabel('Number of Iteration')
+plt.ylabel('Weight')
+plt.title('Policy Convergence ')
+plt.show()
+
+
+
 # Routing with the LSPI method
 
 for i in range(episodes):
@@ -519,14 +689,14 @@ for i in range(episodes):
     for sample in range(len(samples)):
         phi = phi_matrix[samples[sample][0], samples[sample][1]]
         act = np.argmin(phi_matrix[samples[sample][1], :])
-        print('act:', act)
+        #print('act:', act)
         phi_next = phi_matrix[samples[sample][1], act]
         r = samples[sample][3]
         loss = phi - gamma * phi_next
         A = A + phi * loss
         b = b + phi * r
         new_w = b / A
-        print('new_w:', new_w)
+        #print('new_w:', new_w)
 
     phi_matrix = new_w * phi_matrix
 
@@ -620,7 +790,6 @@ plt.title('Q-Value Convergence ')
 plt.show()
 
 plt.plot(Episode, Q_value)
-plt.plot(Episode, Min_value)
 plt.xlabel('Round')
 plt.ylabel('Q-Value')
 plt.title('Q-Value Convergence ')
@@ -631,3 +800,4 @@ plt.xlabel('Round')
 plt.ylabel('Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
+'''
