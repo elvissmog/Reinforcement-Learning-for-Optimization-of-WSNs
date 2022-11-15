@@ -24,7 +24,7 @@ def build_graph(positions, links):
     for u, v in links:
         distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
             (position_array[u][1] - position_array[v][1]), 2))
-        nor_distance = math.ceil(distance / txr)
+        nor_distance = math.ceil(distance)
         G.add_edge(u, v, weight=nor_distance)
 
     def is_tree_of_graph(child, parent):
@@ -42,7 +42,7 @@ def build_graph(positions, links):
     for tu, tv in mst_edge:
         mst_edge_dis = math.sqrt(math.pow((position_array[tu][0] - position_array[tv][0]), 2) + math.pow(
             (position_array[tu][1] - position_array[tv][1]), 2))
-        mst_edge_cost.append(math.ceil(mst_edge_dis / txr))
+        mst_edge_cost.append(math.ceil(mst_edge_dis))
 
     mst_cost = sum(mst_edge_cost)
 
@@ -78,7 +78,7 @@ def build_graph(positions, links):
         for (x, y) in mst:
             distance = math.sqrt(math.pow((position_array[x][0] - position_array[y][0]), 2) + math.pow((position_array[x][1] - position_array[y][1]), 2))
 
-            h.add_edge(x, y, weight=math.ceil(distance / txr))
+            h.add_edge(x, y, weight=math.ceil(distance))
 
         return h
 
@@ -106,7 +106,7 @@ def build_graph(positions, links):
             dis = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
                 (position_array[u][1] - position_array[v][1]), 2))
 
-            t.add_edge(u, v, weight=math.ceil(dis / txr))
+            t.add_edge(u, v, weight=math.ceil(dis))
         unique_MSTs.append(t)
 
     # Generating new MSTs from the unique_MSTs using genetic algorithm
@@ -134,7 +134,7 @@ def build_graph(positions, links):
 
                 for (su, sv) in sub_graph_edges:
                     dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow((position_array[su][1] - position_array[sv][1]), 2))
-                    sub_graph.add_edge(su, sv, weight=math.ceil(dis / txr))
+                    sub_graph.add_edge(su, sv, weight=math.ceil(dis))
 
                 new_mst = nx.minimum_spanning_tree(sub_graph)
                 # print(list(new_mst.edges))
@@ -166,7 +166,7 @@ def build_graph(positions, links):
                     dis = math.sqrt(math.pow((position_array[us][0] - position_array[vs][0]), 2) + math.pow(
                         (position_array[us][1] - position_array[vs][1]), 2))
 
-                    su_graph.add_edge(us, vs, weight=math.ceil(dis) / txr)
+                    su_graph.add_edge(us, vs, weight=math.ceil(dis))
 
                 cut_set = [value for value in su_graph_edges if value not in sgr_ed]
                 # print('cut_set:', cut_set)
@@ -182,7 +182,7 @@ def build_graph(positions, links):
                     dis = math.sqrt(math.pow((position_array[ms][0] - position_array[vu][0]), 2) + math.pow(
                         (position_array[ms][1] - position_array[vu][1]), 2))
 
-                    mu_graph.add_edge(ms, vu, weight=math.ceil(dis / txr))
+                    mu_graph.add_edge(ms, vu, weight=math.ceil(dis))
 
                 if is_tree_of_graph(mu_graph, G):
                     if set(mu_graph.edges()) not in ind_pop:
@@ -200,7 +200,7 @@ def build_graph(positions, links):
                     dis = math.sqrt(math.pow((position_array[pu][0] - position_array[pv][0]), 2) + math.pow(
                         (position_array[pu][1] - position_array[pv][1]), 2))
 
-                    ipg.add_edge(pu, pv, weight=math.ceil(dis / txr))
+                    ipg.add_edge(pu, pv, weight=math.ceil(dis))
                 ind_pop_graphs.append(ipg)
 
             # print('ind_pop_graphs:', ind_pop_graphs)
@@ -214,7 +214,7 @@ def build_graph(positions, links):
                 for up, vp in pop_edges:
                     dist_edge = math.sqrt(math.pow((position_array[up][0] - position_array[vp][0]), 2) + math.pow(
                         (position_array[up][1] - position_array[vp][1]), 2))
-                    pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge / txr))
+                    pop_Spanning_Tree_Edge_Distances.append(math.ceil(dist_edge))
                 pop_Tree_Cost = sum(pop_Spanning_Tree_Edge_Distances)
 
                 # print("pop spanning tree cost is:", pop_Tree_Cost)
@@ -233,7 +233,7 @@ def build_graph(positions, links):
                     dis = math.sqrt(math.pow((position_array[su][0] - position_array[sv][0]), 2) + math.pow(
                         (position_array[su][1] - position_array[sv][1]), 2))
 
-                    us.add_edge(su, sv, weight=math.ceil(dis / txr))
+                    us.add_edge(su, sv, weight=math.ceil(dis))
                 unique_sol.append(us)
 
             final_pop = []
@@ -278,20 +278,17 @@ def build_graph(positions, links):
             ref_e_vals[idx] = sink_energy
 
 
-
-
-
     return G, all_msts, MST_paths, initial_e_vals, ref_e_vals, Q_matrix
 
 
-with open('edges1.txt', 'r') as filehandle:
+with open('edges.txt', 'r') as filehandle:
     edges_list = json.load(filehandle)
 
 list_unweighted_edges = []
 for ed in edges_list:
     list_unweighted_edges.append(tuple(ed))
 
-with open('pos1.txt', 'r') as filehandle:
+with open('pos.txt', 'r') as filehandle:
     pos_list = json.load(filehandle)
 
 x_y = []
@@ -305,10 +302,9 @@ for index in range(len(x_y)):
 # initialization of network parameters
 discount_factor = 0
 learning_rate = 0.9
-initial_energy = 1  # Joules
+initial_energy = 10  # Joules
 data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 5
-txr = 1              # Transmission range
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12  # Joules/bit/(meter)**4
 node_energy_limit = 0
@@ -316,19 +312,19 @@ epsilon = 0.1
 episodes = 5000000
 sink_energy = 5000000
 num_pac = 1
-cr = 1  # crossover rate
+cr = 10  # crossover rate
 mr = 100  # mutation rate
 ng = 100  # number of generations
 
 
-d_o = math.sqrt(e_fs / e_mp) / txr
+d_o = math.sqrt(e_fs / e_mp)
 
 #Cum_reward = []
 #Q_value = []
 #Min_value = []
 Episode = []
 #E_consumed = []
-#EE_consumed = []
+EE_consumed = []
 No_Alive_Node = []
 
 graph, rts, rtp, initial_E_vals, ref_E_vals, q_matrix = build_graph(xy, list_unweighted_edges)
@@ -364,7 +360,7 @@ for rdn in range(episodes):
         while counter < len(chosen_MST[node]) - 1:
             init_node = chosen_MST[node][counter]
             next_node = chosen_MST[node][counter + 1]
-            dis = math.sqrt(math.pow((xy[init_node][0] - xy[next_node][0]), 2) + math.pow((xy[init_node][1] - xy[next_node][1]), 2)) / txr
+            dis = math.sqrt(math.pow((xy[init_node][0] - xy[next_node][0]), 2) + math.pow((xy[init_node][1] - xy[next_node][1]), 2))
             if dis <= d_o:
                 etx = electronic_energy * data_packet_size + e_fs * data_packet_size * math.pow(dis, 2)
             else:
@@ -383,9 +379,14 @@ for rdn in range(episodes):
 
     # reward = initial_E_vals[max(initial_E_vals.keys(), key=(lambda k: initial_E_vals[k]))]
 
+    try:
+        Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in graph.nodes if i != sink_node]
+        Energy_com = [ref_E_vals[i] - initial_E_vals[i] for i in graph.nodes]
+        reward = max(Energy_Consumption)
+    except (ValueError, IndexError, KeyError):
+        break
 
-    Energy_Consumption = [ref_E_vals[i] - initial_E_vals[i] for i in graph.nodes if i != sink_node]
-    reward = max(Energy_Consumption)
+    EE_consumed.append(sum(Energy_com))
 
     #Min_value.append(reward)
     #Cum_reward.append(sum(Min_value))
@@ -436,8 +437,8 @@ for rdn in range(episodes):
 
             initial_E_vals = update_evals
             ref_E_vals = initial_E_vals
-            update_qmatrix = np.ones((len(rts), len(rts)))
-            q_matrix = update_qmatrix * new_q
+            #update_qmatrix = np.ones((len(rts), len(rts)))
+            #q_matrix = update_qmatrix * new_q
 
         except (ValueError, IndexError, KeyError):
             # Error = messagebox.showinfo("Enter proper values")
@@ -445,6 +446,9 @@ for rdn in range(episodes):
             break
 
     dead_node = []
+
+print('LT_snr:', len(Episode))
+print('Total EC:', sum(EE_consumed))
 
 print("--- %s seconds ---" % (time.time() - start_time))
 
