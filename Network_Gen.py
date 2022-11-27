@@ -1,61 +1,91 @@
-import matplotlib.pyplot as plt
 import networkx as nx
+from scipy.spatial.distance import pdist, squareform
 import math
 import json
-import random
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
 
+
+txr = 150   #Transmission radius
 
 G = nx.Graph()
 
-'''
-n = 101
-w = 5050
+with open('pos.txt', 'r') as filehandle:
+    pos_list = json.load(filehandle)
 
-for i in range(n):
-    G.add_node(list(range(n))[i], pos=(random.randint(0, 1000), random.randint(0, 1000)))
+xy = []
+for ps in pos_list:
+    xy.append(tuple(ps))
+
+print('xy:', xy)
+
+with open('edges.txt', 'r') as filehandle:
+    edges_list = json.load(filehandle)
 
 list_unweighted_edges = []
-for i in range(w):
-    u = random.choice(range(n))
-    v = random.choice((range(n)))
-    if u != v:
-        list_unweighted_edges.append((u, v))
+for ed in edges_list:
+    list_unweighted_edges.append(tuple(ed))
 
-print('No of edges:', len(list_unweighted_edges))
+print('Initial_edges:', len(list_unweighted_edges))
+
+
+for i in range(len(xy)):
+	G.add_node(i, pos=xy[i])
 
 
 position_array = []
 for node in sorted(G):
     position_array.append(G.nodes[node]["pos"])
 
-print('p:', position_array)
-print('e:', list_unweighted_edges)
 
 for u, v in list_unweighted_edges:
-    distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
-        (position_array[u][1] - position_array[v][1]), 2))
+    if u != v:
+        distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
+            (position_array[u][1] - position_array[v][1]), 2))
 
-    G.add_edge(u, v, weight=math.ceil(distance))
+        if distance <= txr:
+
+            G.add_edge(u, v, weight=math.ceil(distance))
 
 list_edges = list(G.edges())
 
-
-# open output file for writing
-with open('edges1.txt', 'w') as filehandle:
-    json.dump(list_edges, filehandle)
-
-with open('pos1.txt', 'w') as filehandle:
-    json.dump(position_array, filehandle)
+print('No of edges:', len(list_edges))
 
 
-traffic = {}
-for node in G.nodes:
-    if node != sink_node:
-        traffic[node] = random.randint(1, 5)
+node_pos = nx.get_node_attributes(G, 'pos')
+edge_weight = nx.get_edge_attributes(G, 'weight')
 
-with open('traffic.txt', 'w') as filehandle:
-    json.dump(traffic, filehandle)
+node_col = ['green']
+edge_col = ['black']
 
 '''
+# Draw the nodes
+nx.draw_networkx(G, node_pos, node_color=node_col, node_size=200)
+# Draw the node labels
+nx.draw_networkx_labels(G, node_pos, node_color=node_col)
+# Draw the edges
+nx.draw_networkx_edges(G, node_pos, edge_color=edge_col)
+# Draw the edge labels
+#nx.draw_networkx_edge_labels(G, node_pos, edge_color=edge_col, edge_labels=edge_weight)
+# Show the axis
+plt.xlabel('Distance (m)')
+plt.ylabel('Distance (m)')
+#plt.title('Cummulative Energy Consumption per Round')
+plt.legend()
+plt.axis('on')
+# Show the plot
+plt.show()
+'''
+# Draw the nodes
 
+#G.remove_edges_from(G.edges())
+fig, ax = plt.subplots()
+nx.draw(G, pos=node_pos,  ax=ax) #notice we call draw, and not draw_networkx_nodes
+limits=plt.axis('on') # turns on axis
+plt.xlabel('Distance (m)')
+plt.ylabel('Distance (m)')
+ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
+plt.show()
 
