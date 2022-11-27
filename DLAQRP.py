@@ -49,6 +49,7 @@ for ed in edges_list:
     list_unweighted_edges.append(tuple(ed))
 
 
+print(len(list_unweighted_edges))
 
 for i in range(len(xy)):
 	G.add_node(i, pos=xy[i])
