@@ -23,10 +23,12 @@ def build_graph(positions, links):
         position_array[nd] = G.nodes[nd]['pos']
 
     for u, v in links:
-        distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
+        if u != v:
+            distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
             (position_array[u][1] - position_array[v][1]), 2))
-        nor_distance = math.ceil(distance)
-        G.add_edge(u, v, weight=nor_distance)
+            nor_distance = math.ceil(distance)
+            if distance <= txr:
+                G.add_edge(u, v, weight=nor_distance)
 
     def is_tree_of_graph(child, parent):
 
@@ -417,9 +419,10 @@ data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12  # Joules/bit/(meter)**4
+txr = 160
 node_energy_limit = 0
 epsilon = 0.1
-gamma = 0.99
+gamma = 0.9
 episodes = 5000000
 sink_energy = 5000000
 num_pac = 1
@@ -564,9 +567,11 @@ with open('lspinan.txt', 'r') as f:
     No_Alive_Node = json.loads(f.read())
 
 
+'''
 plt.plot(Episode, No_Alive_Node)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
+'''
 
