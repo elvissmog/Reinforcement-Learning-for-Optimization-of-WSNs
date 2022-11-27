@@ -22,10 +22,12 @@ def build_graph(positions, links):
         position_array[nd] = G.nodes[nd]['pos']
 
     for u, v in links:
-        distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
+        if u != v:
+            distance = math.sqrt(math.pow((position_array[u][0] - position_array[v][0]), 2) + math.pow(
             (position_array[u][1] - position_array[v][1]), 2))
-        nor_distance = math.ceil(distance)
-        G.add_edge(u, v, weight=nor_distance)
+            nor_distance = math.ceil(distance)
+            if distance <= txr:
+                G.add_edge(u, v, weight=nor_distance)
 
     def is_tree_of_graph(child, parent):
 
@@ -307,6 +309,7 @@ data_packet_size = 1024  # bits
 electronic_energy = 50e-9  # Joules/bit 5
 e_fs = 10e-12  # Joules/bit/(meter)**2
 e_mp = 0.0013e-12  # Joules/bit/(meter)**4
+txr = 160   # transmission radius
 node_energy_limit = 0
 epsilon = 0.1
 episodes = 5000000
@@ -319,11 +322,8 @@ ng = 100  # number of generations
 
 d_o = math.sqrt(e_fs / e_mp)
 
-#Cum_reward = []
-#Q_value = []
-#Min_value = []
+
 Episode = []
-#E_consumed = []
 EE_consumed = []
 No_Alive_Node = []
 
@@ -388,9 +388,6 @@ for rdn in range(episodes):
 
     EE_consumed.append(sum(Energy_com))
 
-    #Min_value.append(reward)
-    #Cum_reward.append(sum(Min_value))
-
     # Maximum possible Q value in next step (for new state)
     max_future_q = np.max(q_matrix[action, :])
 
@@ -404,8 +401,6 @@ for rdn in range(episodes):
     # Update Q table with new Q value
     q_matrix[current_state, action] = new_q
 
-    #E_consumed.append(tx_energy + rx_energy)
-    #EE_consumed.append(sum(E_consumed))
     No_Alive_Node.append(len(xy) - 1)
     Episode.append(rdn)
     cost = 0
@@ -459,10 +454,10 @@ with open('sonan.txt', 'w') as f:
 with open('sonan.txt', 'r') as f:
     No_Alive_Node = json.loads(f.read())
 
-
+'''
 plt.plot(Episode, No_Alive_Node)
 plt.xlabel('Round')
 plt.ylabel('Average Q-Value')
 plt.title('Q-Value Convergence ')
 plt.show()
-
+'''
